@@ -3,11 +3,11 @@
 
 ## TP 1: Regresión lineal
 
-[Enunciado]()
+[Consignas](https://github.com/magistery-tps/eea-tp1/blob/master/docs/consignas.pdf)
 
 ## Requisitos
 
-* git
+* Git
 * R/R Studio
 
 ## Comenzando
@@ -19,9 +19,8 @@ $ git clone https://github.com/magistery-tps/eea-tp1.git
 $ cd dm-tp2
 ```
 
-**Paso 2**:  Decomprimir el dataset.
+**Paso 2**:  Abrir proyecto en Rstudio.
 
 ```bash
-$ 
+$ open -na Rstudio .
 ```
-
