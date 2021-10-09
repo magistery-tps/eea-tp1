@@ -21,7 +21,7 @@ output:
 ```{r}
 options(warn=-2)
 library(pacman)
-p_load(commons, tidyverse, GGally, fastDummies, plotly)
+p_load(commons, tidyvers, GGally, fastDummies)
 p_load_gh('adrianmarino/commons')
 import('../src/dataset.R')
 import('../src/preprocessing.R')
@@ -40,144 +40,13 @@ colnames(train_set)
 
 Leer el archivo "encuesta_salud_train.csv". ¿Qué puede mencionar sobre su estructura y variables? ¿Cómo es la correlación entre las variables numéricas? Utilice y analice en detalle algún gráfico que sirva para sacar conclusiones sobre la asociación de variables realizando apertura por género. En particular, ¿cómo es la correlación entre la variable a explicar (peso) y el resto de las variables numéricas? Para las categorías de la variable frecuencia de hambre mensual, analice gráficamente la distribución en términos de frecuencia relativa de:
 
-a) El consumo semanal de verdura. 
-b) El consumo semanal de comida grasa.
+a\) El consumo semanal de verdura. b) El consumo semanal de comida grasa.
 
 ¿Cuáles son las principales características que observa en estos gráficos?
-
-# 1.1 ¿Qué puede mencionar sobre su estructura y variables? 
 
 ```{r}
 glimpse(train_set)
 ```
-```{r}
-hist_plots <- function(df, columns=c()) {
-  if(is_empty(columns)) {
-    columns <- train_set %>% select(is.numeric) %>% colnames()
-  }
-  for(col in columns) {
-    p <- ggplot(df, aes(!!sym(col))) + 
-      geom_histogram(col="red", aes(fill=..count..), alpha = .65) +
-      scale_fill_gradient("Frecuencia", low="green", high="red")
-    print(p)
-  }
-}
-
-box_plots <- function(df) {
-  df %>% 
-    pivot_longer(is.numeric, names_to = "Variables", values_to = "Frecuencia") %>%
-    ggplot(aes(x = Variables, y = Frecuencia, fill = Variables)) +
-    scale_y_continuous(limits = c(0, 180)) +
-    geom_boxplot(width=0.7) +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
-}
-
-missings_summary <- function(
-  df, 
-  missings = c(NA, NULL, 'Dato perdido')
-) {
-  df %>% 
-      gather(., key = Variable, value = value) %>%
-      mutate(is_missing = if_else(value %in% missings, 1, 0)) %>%
-      group_by(Variable) %>% 
-      summarise(
-        `Nª Categorias` = n_distinct(value),
-        `Nª Faltantes`   = sum(is_missing),
-        `% Faltantes`    = round(`Nª Faltantes` / nrow(df) * 100, 2)
-      ) %>%
-      arrange(desc(`% Faltantes`), `Nª Categorias`)
-}
-
-important_variables_set <- function(result, top=3, metrics=c("%IncMSE", "IncNodePurity")) {
-  metrics %>% 
-    map(function(metric) top_acc_features(result, top, metric) ) %>% 
-    unlist() %>% 
-    unique()
-}
-
-bar_plots <- function(
-  df, 
-  columns    = c(),
-  width      = 0.9, 
-  count_size = 2
-) {
-  if(is_empty(columns)) {
-    columns <- train_set %>% select(!is.numeric) %>% colnames()
-  }
-  for(column in columns) {
-    p <- ggplot(
-      df %>% 
-         group_by(!!sym(column)) %>% 
-         tally() %>%
-         mutate(Frecuencia = n), 
-      aes(x=!!sym(column), y=Frecuencia, fill=!!sym(column))
-    ) +
-    geom_col(stat="identity", width=width, position = "dodge") +
-    geom_text(aes(label=Frecuencia), vjust=2, color="white", size=count_size) +
-    theme_minimal() +
-    theme(
-        axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank()
-    )
-    print(p)
-  }
-}
-```
-
-```{r}
-missings_summary(train_set)
-```
-
-```{r}
-train_set %>% group_by(consumo_semanal_comida_grasa) %>% tally()
-train_set %>% group_by(consumo_semanal_verdura) %>% tally()
-train_set %>% group_by(consumo_semanal_snacks) %>% tally()
-train_set %>% group_by(consumo_semanal_gaseosas) %>% tally()
-train_set %>% group_by(consumo_semanal_frutas) %>% tally()
-train_set %>% group_by(frecuencia_hambre_mensual) %>% tally()
-```
-
-```{r}
-mapping <- list(
-  '1 a 3 veces durante los últimos 7 días'                    = '<=3',
-  '1 vez al día'                                              = '7',
-  '2 veces al día'                                            = '14',
-  '3 veces al día'                                            = '21',
-  '4 a 6 veces durante los últimos 7 días'                    = '4-6',
-  '4 o más veces al día'                                      = '>=28',
-  'No comí comida alta en grasa en los últimos 7 días'        = '0',
-  'No comí verduras ni hortalizas durante los últimos 7 días' = '0',
-  'No comí comida salada o snacks en los últimos 7 días'      = '0',
-  'No tomé gaseosas en los últimos 7 días'                    = '0',
-  'No comí frutas durante los últimos 7 días'                 = '0'
-)
-
-mapping_cols <- c(
-  'consumo_semanal_comida_grasa',
-  'consumo_semanal_verdura',
-  'consumo_semanal_snacks',	
-  'consumo_semanal_gaseosas',	
-  'consumo_semanal_frutas'
-)
-
-train_set %>% mutate_at(mapping_cols, function(x) mapping[x])
-```
-
-```{r}
-hist_plots(train_set)
-```
-
-```{r}
-box_plots(train_set)
-```
-
-```{r}
-bar_plots(train_set)
-```
-
-
-
 
 ```{r}
 fi_result <- features_importance(train_set, target_column)
@@ -185,23 +54,21 @@ plot_features_importance(fi_result)
 ```
 
 ```{r}
-most_important_variables <- important_variables_set(fi_result)
-most_important_variables
+features <- top_acc_features(fi_result, top=5)
+features
 ```
-
 
 ```{r}
-train_set %>%
-  select(c(most_important_variables, genero)) %>% 
-  ggpairs(
-    aes(color=genero), 
-    upper = list(continuous = wrap("cor", size = 3, hjust=0.8, alignPercent=0.15)), 
-    legend = 25
-  ) + 
-  theme_bw() +
-  theme(axis.text.x = element_text(angle=45, vjust=0.5), legend.position = "bottom")
+cat_variables <- cat_vars(train_set)
+cat_variables
 ```
 
+```{r}
+for(variable in cat_variables) {
+  print(variable)
+  print(table(train_set %>% select(variable)))
+}
+```
 
 ```{r}
 one_hot_encode <- function(df) {
