@@ -1,0 +1,25 @@
+source,target
+"1 a 3 veces durante los últimos 7 días","<=3"
+1 vez al día,7
+2 veces al día,14
+3 veces al día,21
+4 a 6 veces durante los últimos 7 días,4-6
+4 o más veces al día,>=28
+No comí comida alta en grasa en los últimos 7 días,0
+No comí verduras ni hortalizas durante los últimos 7 días,0
+No comí comida salada o snacks en los últimos 7 días,0
+No tomé gaseosas en los últimos 7 días,0
+No comí frutas durante los últimos 7 días,0
+1er año/10mo grado nivel Polimodal o 3er año nivel Secundario,1
+2do año/11vo grado nivel Polimodal o 4to año nivel Secundario,2
+3er año/12vo grado nivel Polimodal o 5to año nivel Secundario,3
+8vo grado nivel Primario/Polimodal  o 1er año nivel Secundario,8
+9no grado nivel Primario/Polimodal o 2do año nivel Secundario,9
+10 o 11 años,10-11
+12 o 13 años,12-13
+14 o 15 años,14-15
+16 o 17 años,16-17
+18 años o más,>=18
+7 años o menos,<=7
+8 o 9 años,8-9
+Nunca tomé alcohol más que unos pocos sorbos,0

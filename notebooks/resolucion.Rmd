@@ -20,40 +20,41 @@ output:
 
 ```{r}
 options(warn=-2)
+# install.packages("pacman")
 library(pacman)
-p_load(commons, tidyverse, GGally, fastDummies, plotly)
+p_load(tidyverse, GGally, fastDummies, plotly)
 p_load_gh('adrianmarino/commons')
 import('../src/dataset.R')
 import('../src/preprocessing.R')
 ```
 
 ```{r}
-train_set <- preprocess(load_train_set())
-test_set  <- preprocess(load_test_set())
-```
+raw_train_set <- load_train_set()
+raw_test_set  <- load_test_set()
 
-```{r}
-colnames(train_set)
+train_set <- preprocess(raw_train_set)
+test_set  <- preprocess(raw_test_set)
 ```
 
 ## 1. Análisis exploratorios
 
 Leer el archivo "encuesta_salud_train.csv". ¿Qué puede mencionar sobre su estructura y variables? ¿Cómo es la correlación entre las variables numéricas? Utilice y analice en detalle algún gráfico que sirva para sacar conclusiones sobre la asociación de variables realizando apertura por género. En particular, ¿cómo es la correlación entre la variable a explicar (peso) y el resto de las variables numéricas? Para las categorías de la variable frecuencia de hambre mensual, analice gráficamente la distribución en términos de frecuencia relativa de:
 
-a) El consumo semanal de verdura. 
-b) El consumo semanal de comida grasa.
+a)  El consumo semanal de verdura.
+b)  El consumo semanal de comida grasa.
 
 ¿Cuáles son las principales características que observa en estos gráficos?
 
-# 1.1 ¿Qué puede mencionar sobre su estructura y variables? 
+# 1.1 ¿Qué puede mencionar sobre su estructura y variables?
 
 ```{r}
 glimpse(train_set)
 ```
+
 ```{r}
 hist_plots <- function(df, columns=c()) {
   if(is_empty(columns)) {
-    columns <- train_set %>% select(is.numeric) %>% colnames()
+    columns <- df %>% dplyr::select(is.numeric) %>% colnames()
   }
   for(col in columns) {
     p <- ggplot(df, aes(!!sym(col))) + 
@@ -102,7 +103,7 @@ bar_plots <- function(
   count_size = 2
 ) {
   if(is_empty(columns)) {
-    columns <- train_set %>% select(!is.numeric) %>% colnames()
+    columns <- train_set %>% dplyr::select(!is.numeric) %>% colnames()
   }
   for(column in columns) {
     p <- ggplot(
@@ -123,6 +124,91 @@ bar_plots <- function(
     print(p)
   }
 }
+
+mapping_cols = c(
+  "consumo_semanal_comida_grasa",
+  "consumo_semanal_verdura",
+  "consumo_semanal_snacks",
+  "consumo_semanal_gaseosas",
+  "consumo_semanal_frutas",
+  "nivel_educativo",
+  "edad_consumo_alcohol"
+)
+
+show_values <- function(df , columns=c()) {
+  if(is_empty(columns)) {
+    columns <- df %>% colnames()
+  }
+  for(column in columns) {
+    p <- df %>% group_by(!!sym(column)) %>% tally()
+    print(p)
+  }
+}
+
+drop_missings <- function(df, special_missings = c('Dato perdido')) {
+  df <- df %>% drop_na()
+  column_names <- df %>% colnames()
+
+  for(col in  column_names) {
+    for(missing in special_missings) {
+      df <-df %>% filter(!grepl(missing, !!sym(col)))
+    }
+  }
+  df
+}
+```
+
+```{r}
+mapping <- load_df_from_csv('../dataset/mapping.csv')
+
+table <- train_set %>% 
+  left_join(mapping, by = c("nivel_educativo" = "source")) %>% 
+  mutate(nivel_educativo = target) %>% 
+  select(-target)
+
+table <- table %>% 
+  left_join(mapping, by = c("consumo_semanal_frutas" = "source")) %>% 
+  mutate(consumo_semanal_frutas = target) %>% 
+  select(-target)
+
+table <- table %>% 
+  left_join(mapping, by = c("consumo_semanal_comida_grasa" = "source")) %>% 
+  mutate(consumo_semanal_comida_grasa = target) %>% 
+  select(-target)
+
+table <- table %>% 
+  left_join(mapping, by = c("consumo_semanal_snacks" = "source")) %>% 
+  mutate(consumo_semanal_snacks = target) %>% 
+  select(-target)
+
+table <- table %>% 
+  left_join(mapping, by = c("consumo_semanal_verdura" = "source")) %>% 
+  mutate(consumo_semanal_verdura = target)  %>% 
+  select(-target)
+
+table <- table %>%
+  left_join(mapping, by = c("consumo_semanal_gaseosas" = "source")) %>% 
+  mutate(consumo_semanal_gaseosas = target) %>% 
+  select(-target)
+
+table <- table %>%
+  left_join(mapping, by = c("edad_consumo_alcohol" = "source")) %>% 
+  mutate(edad_consumo_alcohol = target) %>% 
+  select(-target)
+```
+
+```{r}
+show_values(train_set)
+```
+
+```{r}
+show_values(table, mapping_cols)
+```
+
+```{r}
+train_set <- table
+train_set <- drop_missings(train_set)
+missings_summary(train_set)
 ```
 
 ```{r}
@@ -130,38 +216,8 @@ missings_summary(train_set)
 ```
 
 ```{r}
-train_set %>% group_by(consumo_semanal_comida_grasa) %>% tally()
-train_set %>% group_by(consumo_semanal_verdura) %>% tally()
-train_set %>% group_by(consumo_semanal_snacks) %>% tally()
-train_set %>% group_by(consumo_semanal_gaseosas) %>% tally()
-train_set %>% group_by(consumo_semanal_frutas) %>% tally()
-train_set %>% group_by(frecuencia_hambre_mensual) %>% tally()
-```
-
-```{r}
-mapping <- list(
-  '1 a 3 veces durante los últimos 7 días'                    = '<=3',
-  '1 vez al día'                                              = '7',
-  '2 veces al día'                                            = '14',
-  '3 veces al día'                                            = '21',
-  '4 a 6 veces durante los últimos 7 días'                    = '4-6',
-  '4 o más veces al día'                                      = '>=28',
-  'No comí comida alta en grasa en los últimos 7 días'        = '0',
-  'No comí verduras ni hortalizas durante los últimos 7 días' = '0',
-  'No comí comida salada o snacks en los últimos 7 días'      = '0',
-  'No tomé gaseosas en los últimos 7 días'                    = '0',
-  'No comí frutas durante los últimos 7 días'                 = '0'
-)
-
-mapping_cols <- c(
-  'consumo_semanal_comida_grasa',
-  'consumo_semanal_verdura',
-  'consumo_semanal_snacks',	
-  'consumo_semanal_gaseosas',	
-  'consumo_semanal_frutas'
-)
-
-train_set %>% mutate_at(mapping_cols, function(x) mapping[x])
+train_set <- train_set %>% drop_na()
+missings_summary(train_set)
 ```
 
 ```{r}
@@ -176,9 +232,6 @@ box_plots(train_set)
 bar_plots(train_set)
 ```
 
-
-
-
 ```{r}
 fi_result <- features_importance(train_set, target_column)
 plot_features_importance(fi_result)
@@ -189,10 +242,9 @@ most_important_variables <- important_variables_set(fi_result)
 most_important_variables
 ```
 
-
 ```{r}
 train_set %>%
-  select(c(most_important_variables, genero)) %>% 
+  dplyr::select(c(most_important_variables, genero)) %>% 
   ggpairs(
     aes(color=genero), 
     upper = list(continuous = wrap("cor", size = 3, hjust=0.8, alignPercent=0.15)), 
@@ -202,19 +254,17 @@ train_set %>%
   theme(axis.text.x = element_text(angle=45, vjust=0.5), legend.position = "bottom")
 ```
 
-
 ```{r}
 one_hot_encode <- function(df) {
   cat_variables <- cat_vars(train_set)
-  dummy_cols(df,  select_columns = cat_variables) %>% select(-cat_variables)
+  dummy_cols(df,  select_columns = cat_variables) %>% 
+    dplyr::select(-cat_variables)
 }
 
 encoded_train_set <- one_hot_encode(train_set)
 encoded_test_set <- one_hot_encode(test_set)
 encoded_test_set
 ```
-
-
 
 ## 2. Modelo inicial
 
