@@ -19,13 +19,20 @@ output:
 ---
 
 ```{r}
+cat("\014")
+rm(list=ls())
+gc()
 options(warn=-2)
+```
+
+```{r}
 # install.packages("pacman")
 library(pacman)
-p_load(tidyverse, GGally, fastDummies, plotly)
+p_load(tidyverse, fastDummies)
 p_load_gh('adrianmarino/commons')
 import('../src/dataset.R')
 import('../src/preprocessing.R')
+import('../src/plot.R')
 ```
 
 ```{r}
@@ -45,214 +52,162 @@ b)  El consumo semanal de comida grasa.
 
 ¿Cuáles son las principales características que observa en estos gráficos?
 
-# 1.1 ¿Qué puede mencionar sobre su estructura y variables?
+**1.1.** ¿Qué puede mencionar sobre la estructura y variables del dataset?
 
 ```{r}
 glimpse(train_set)
 ```
 
-```{r}
-hist_plots <- function(df, columns=c()) {
-  if(is_empty(columns)) {
-    columns <- df %>% dplyr::select(is.numeric) %>% colnames()
-  }
-  for(col in columns) {
-    p <- ggplot(df, aes(!!sym(col))) + 
-      geom_histogram(col="red", aes(fill=..count..), alpha = .65) +
-      scale_fill_gradient("Frecuencia", low="green", high="red")
-    print(p)
-  }
-}
+Se parecían tanto variable numéricas como categóricas:
 
-box_plots <- function(df) {
-  df %>% 
-    pivot_longer(is.numeric, names_to = "Variables", values_to = "Frecuencia") %>%
-    ggplot(aes(x = Variables, y = Frecuencia, fill = Variables)) +
-    scale_y_continuous(limits = c(0, 180)) +
-    geom_boxplot(width=0.7) +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
-}
+Numéricas:
+* edad
+* altura
+* peso
+* dias_consumo_comida_rapida: Dias de consumo de comida rapida por semana.
+* dias_actividad_fisica_semanal
 
-missings_summary <- function(
-  df, 
-  missings = c(NA, NULL, 'Dato perdido')
-) {
-  df %>% 
-      gather(., key = Variable, value = value) %>%
-      mutate(is_missing = if_else(value %in% missings, 1, 0)) %>%
-      group_by(Variable) %>% 
-      summarise(
-        `Nª Categorias` = n_distinct(value),
-        `Nª Faltantes`   = sum(is_missing),
-        `% Faltantes`    = round(`Nª Faltantes` / nrow(df) * 100, 2)
-      ) %>%
-      arrange(desc(`% Faltantes`), `Nª Categorias`)
-}
+Categóricas:
+* genero: No orginal.
+* nivel_educativo: De tipo orginal. El orden seria 8, 9, 1, 2, 3 llevándolo a la medida del polimodal.
+* frecuencia_hambre_mensual: De tipo ordinal, Ej.: Siempre es mas de nunca.
+* edad_consumo_alcohol: Entiendo que es la edad en la que se comenzo a consumir alcohol. Es claramente ordinal.
+* consumo_diario_alcohol: Categórica ordinal. Cuando mas se consume mas contraproducente.
+* consumo_semanal_frutas: Categórica ordinal.
+* consumo_semanal_verdura: Categórica ordinal.
+* consumo_semanal_gaseosas: Categórica ordinal.
+* consumo_semanal_snacks: Categórica ordinal.
+* consumo_semanal_comida_grasa: Categórica ordinal.
 
-important_variables_set <- function(result, top=3, metrics=c("%IncMSE", "IncNodePurity")) {
-  metrics %>% 
-    map(function(metric) top_acc_features(result, top, metric) ) %>% 
-    unlist() %>% 
-    unique()
-}
+A continuacion abreviamos los valores de la variables categóricas y los llevamos a una unica unidad de media, ya sea veces/semana o veces/día:
 
-bar_plots <- function(
-  df, 
-  columns    = c(),
-  width      = 0.9, 
-  count_size = 2
-) {
-  if(is_empty(columns)) {
-    columns <- train_set %>% dplyr::select(!is.numeric) %>% colnames()
-  }
-  for(column in columns) {
-    p <- ggplot(
-      df %>% 
-         group_by(!!sym(column)) %>% 
-         tally() %>%
-         mutate(Frecuencia = n), 
-      aes(x=!!sym(column), y=Frecuencia, fill=!!sym(column))
-    ) +
-    geom_col(stat="identity", width=width, position = "dodge") +
-    geom_text(aes(label=Frecuencia), vjust=2, color="white", size=count_size) +
-    theme_minimal() +
-    theme(
-        axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank()
-    )
-    print(p)
-  }
-}
-
-mapping_cols = c(
-  "consumo_semanal_comida_grasa",
-  "consumo_semanal_verdura",
-  "consumo_semanal_snacks",
-  "consumo_semanal_gaseosas",
-  "consumo_semanal_frutas",
-  "nivel_educativo",
-  "edad_consumo_alcohol"
-)
-
-show_values <- function(df , columns=c()) {
-  if(is_empty(columns)) {
-    columns <- df %>% colnames()
-  }
-  for(column in columns) {
-    p <- df %>% group_by(!!sym(column)) %>% tally()
-    print(p)
-  }
-}
-
-drop_missings <- function(df, special_missings = c('Dato perdido')) {
-  df <- df %>% drop_na()
-  column_names <- df %>% colnames()
-
-  for(col in  column_names) {
-    for(missing in special_missings) {
-      df <-df %>% filter(!grepl(missing, !!sym(col)))
-    }
-  }
-  df
-}
-```
 
 ```{r}
-mapping <- load_df_from_csv('../dataset/mapping.csv')
-
-table <- train_set %>% 
-  left_join(mapping, by = c("nivel_educativo" = "source")) %>% 
-  mutate(nivel_educativo = target) %>% 
-  select(-target)
-
-table <- table %>% 
-  left_join(mapping, by = c("consumo_semanal_frutas" = "source")) %>% 
-  mutate(consumo_semanal_frutas = target) %>% 
-  select(-target)
-
-table <- table %>% 
-  left_join(mapping, by = c("consumo_semanal_comida_grasa" = "source")) %>% 
-  mutate(consumo_semanal_comida_grasa = target) %>% 
-  select(-target)
-
-table <- table %>% 
-  left_join(mapping, by = c("consumo_semanal_snacks" = "source")) %>% 
-  mutate(consumo_semanal_snacks = target) %>% 
-  select(-target)
-
-table <- table %>% 
-  left_join(mapping, by = c("consumo_semanal_verdura" = "source")) %>% 
-  mutate(consumo_semanal_verdura = target)  %>% 
-  select(-target)
-
-table <- table %>%
-  left_join(mapping, by = c("consumo_semanal_gaseosas" = "source")) %>% 
-  mutate(consumo_semanal_gaseosas = target) %>% 
-  select(-target)
-
-table <- table %>%
-  left_join(mapping, by = c("edad_consumo_alcohol" = "source")) %>% 
-  mutate(edad_consumo_alcohol = target) %>% 
-  select(-target)
-```
-
-```{r}
+train_set <- simplify_values(train_set)
 show_values(train_set)
 ```
 
-```{r}
-show_values(table, mapping_cols)
-```
+Por otro lado, se encontraron valores faltantes. Esto no estaban expresados típica-mente por NA o NULL sino que están definidos implícitamente como "Data perdido"). En el paso anterior se transformaron todos a NA's. A continiacuon podemos ver un resumen de faltantes por variables:
 
 ```{r}
-train_set <- table
+missings_summary(train_set)
+```
+Se aprecia que solo 7 variables tiene faltantes y el valor máximo en un 1.4% del total para nivel educativo. En este análisis no vamos a optar por completar valores y optiamos por eliminarlos ya que es un porcentaje muy bajo.
+
+```{r}
 train_set <- drop_missings(train_set)
 missings_summary(train_set)
 ```
 
-```{r}
-missings_summary(train_set)
-```
-
-```{r}
-train_set <- train_set %>% drop_na()
-missings_summary(train_set)
-```
+A continuación vamos a analizar cada variable por separados comienzaond por la variables numéricas:
 
 ```{r}
 hist_plots(train_set)
 ```
 
+Observaciones:
+* La encuesta se realizo en una población de chicos entre 12 y 18 años.
+* La distribución de la edad  y la altura son muy cercanas a la normal.
+* La distribución del peso esta sesgada a derecha, ya que la medio del peso se encuentra en los 50 kg entendiendo se que hay una cierta relación con la edad, donde el peso es menor que en una población adulta.
+* El consumo de comida rápida diario parece ser muy saludable en general que la distribución esta sesgada nuevamente a derecha, indicando que lo mas común es un consuma bajo de comida rápida.
+* En general la mayoría no consume alcohol pero hay un un numero importante que consume 5 veces al día, comprendiendo que son los mayores.
+* Hay un alto porcentaje de individuos que realizar actividad física 2 o 7 días a la semana. siendo un poco mas alto que el porcentaje que no hace ninguna actividad.
+En general.
+
+Luego, si comparamos las distribuciones por medio de un box-plot comparativo:
+
 ```{r}
-box_plots(train_set)
+ggplotly(box_plots(train_set))
 ```
+
+Se puede observar que:
+* Tenemos algunos valores atípicos:
+  * Alturas debajo de 136 cms.
+  * Pesos por arriba de los 91kg.
+  * Consumo de comida rápida por superiores a las 2 veces semanales.
+* Las distribuciones peso, altura y edad son claramente separables ya que no se solapan. Esto no sucede con consumo de alcohol,  nª de días de actividad-física/consume-comida-rapida, para las las cuales sus medianas son mas cercanas.
+
+
+A continuación se realizan barplots para las variables categóricas:
 
 ```{r}
 bar_plots(train_set)
 ```
+
+Luego podemos observar que:
+* El dataset tiene un sesgo de genero del 15%. Siendo números tan elevados entiendo que podríamos asumir que es un sesgo bajo.
+* 2 año del polimorfo es máximo y 8vo mínimo.
+* Excluyendo a los individuos que nunca tiene hambre las categorías mas importantes son Rara vez y Algunas veces, lo cual entiendo son valores normales.
+* Lo mas frecuente es comenzar a consumir alcohol entre las 12-13  años seguido de 14-15 años. por otro lado en menor porcentaje(-32%) hay una gran cantidad de individuos que no han comenzaron a consumir alcohol. Finalmente en menor medida existen individuos que consumen alcohol antes de los 7 años de edad.
+* La mayor porcentaje de individuos consumen hasta 3 frutas por semana, seguido de aquellos que no consumen.
+* A diferencia de las frutas el consumo de verduras es mayor. Quienes no consumen verduras bajan al a mitad vs frutas. La mayoría consume hasta 3 veces x semana seguido de 4 a 7.
+* La mayoría consume hasta 3 veces pro semana gaseosa y se aprecia un porcentaje importante para aquellos que no consumen. Luego existe un grupo que consume de 4 a 7 días a la semana.
+* La mayoría consume snasks es hasta 3 veces a la semana o no se consume directamente.
+
+* Es interesante destacar que los consumos de grasas, snack, gaseosas y frutas, parecen tener 3 grupos similares: en mayor medida los que consumen poco, seguida de lo que no consumen y luego los que consumen una cantidad de mediana a alta.
+
+
+A continuación analizamos las correlaciones entre las variables numéricas:
+
+```{r}
+corr_plot(train_set)
+```
+
+Observaciones:
+A primera vista se puede observar que la altura es un facto importante para determinar el peso. Por otro lado se aprecia una relación menor entre el peso y la edad, lo cual es entendible en individuos en crecimiento. Esto ultimo también sucede con la altura y la edad, pero en menor medida. Por ultimo también se aprecia una relación considerable entre la edad y el consumo de alcohol, entendiendo que a mayor edad el consumo de alcohol es mayor(Correlación positiva).
+Final existe una relación muy baja entre el peso y el consumo de alcohol o comida rápida. Esto puede deberse a que en general la mayoría realiza actividad física toda la semana lo cual puede influir a que estas relaciones sean débiles. 
+
+
+A continúan vamos a analizar la relación entre variables realizando una apertura por genero.
+Para realizar este paso vamos seleccionar las variables que mejor discriminan el peso, entendiendo que son las mas importantes para nuestro análisis ya que el gráfico ggpairs no es legible con muchas variables.
 
 ```{r}
 fi_result <- features_importance(train_set, target_column)
 plot_features_importance(fi_result)
 ```
 
-```{r}
-most_important_variables <- important_variables_set(fi_result)
-most_important_variables
-```
+
+Para ser mas equitativos tomamos las 3 variables mas importantes para ambas métricas:
 
 ```{r}
-train_set %>%
-  dplyr::select(c(most_important_variables, genero)) %>% 
-  ggpairs(
-    aes(color=genero), 
-    upper = list(continuous = wrap("cor", size = 3, hjust=0.8, alignPercent=0.15)), 
-    legend = 25
-  ) + 
-  theme_bw() +
-  theme(axis.text.x = element_text(angle=45, vjust=0.5), legend.position = "bottom")
+most_important_variables <- important_variables_set(fi_result, top=3)
+most_important_variables
 ```
+Era de esperable que la altura influya en el peso como vimos anteriormente. Luego la edad también ya que los menores (en general) tiene menor mero que los mayores (18 años). Otro factor el grado de consumo de frutas y verduras. Para comprender por que el peso esta determinado por el genero gemos el siguiente grafico:
+
+
+```{r}
+ggplot(train_set, aes(x=genero, y=peso, fill=genero)) + geom_boxplot()
+```
+Se aprecia que la media del pedo masculino es mayor al femenino, tal vez por una diferencia en su musculatura.
+
+Luego a contiacuon veamo la realacion entre las variables mas importantes.
+
+```{r, out.width="150%"}
+train_set %>% 
+  select(c(most_important_variables, peso)) %>%
+  pairs_plot('genero')
+```
+
+Observaciones:
+
+* Se aprecia que los Masculinos tiene una relación mas fuerte entre su altura y el consumo de frutas/verduras que los femeninos. En comprensible que al ser mas altos en promedio requieran mayor alimento. pot otro lado esta relación entiendo no es muy significativa que que también se puede apreciar el el consumo de frutas y verduras es muy parece en ambos sexos.
+* La altura parase discriminar bien al peso, ya que ambas distribuciones están muy poco solapadas.
+* Las edades tienen varias moda una por cada  año: 8vo, 9no, 1ro, 2do, y 3ro. las edades están bien balanceadas entre ambos sexos, sus media son prácticamente iguales.
+* Se vuelve a apreciar la relación peso-altura la cual parece estar separada or genero. menor peso y altura para los Femeninos y lo contrario para los Masculinos.
+
+```{r}
+colnames(train_set)
+```
+
+
+```{r}
+# ggplot(data = train_set) +
+#   geom_mosaic(
+#    aes(x=frecuencia_hambre_mensual, fill = consumo_semanal_verdura)
+#  ) +
+```
+
 
 ```{r}
 one_hot_encode <- function(df) {
