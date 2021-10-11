@@ -28,15 +28,15 @@ missings_summary <- function(
 }
 
 drop_missings <- function(df, special_missings = c('Dato perdido')) {
-  df <- df %>% drop_na()
-  column_names <- df %>% colnames()
+  table <- df %>% drop_na()
+  column_names <- table %>% colnames()
   
   for(col in  column_names) {
     for(missing in special_missings) {
-      df <-df %>% filter(!grepl(missing, !!sym(col)))
+      table <- table %>% filter(!grepl(missing, !!sym(col)))
     }
   }
-  df
+  table
 }
 
 show_values <- function(df , columns=c()) {

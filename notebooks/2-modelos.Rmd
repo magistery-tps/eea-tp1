@@ -1,0 +1,74 @@
+---
+title: |
+    | Maestría en Explotación de datos y Descubrimiento de conocimiento
+    |
+    |
+    | Materia: Analisis Estadistico del Aprendizaje
+    | Trabajo práctico 1: Regresion Lineal
+author: "Adrian Norberto Marino"
+date: "2021/09/19"
+fig_width: 3 
+fig_height: 3 
+output:
+  html_document: 
+    highlight: pygments
+    theme: sandstone
+    includes:
+      before_body: ./header.html
+      after_body: ./footer.html
+---
+
+```{r}
+cat("\014")
+rm(list=ls())
+gc()
+options(warn=-2)
+```
+
+```{r}
+# install.packages("pacman")
+library(pacman)
+p_load(tidyverse, fastDummies)
+p_load_gh('adrianmarino/commons')
+import('../src/dataset.R')
+import('../src/preprocessing.R')
+import('../src/plot.R')
+```
+
+```{r}
+train_set <- drop_missings(shorten_values(preprocess(load_train_set())))
+test_set  <- drop_missings(shorten_values(preprocess(load_test_set())))
+
+test_set
+```
+
+
+## 2. Modelo inicial
+
+Se plantea que una primera alternativa para modelar el peso es:
+
+E(peso) = β0+β1altura+β2edad+β3genero+β4diasActividadFisicaSemanal+β5consumoDiarioAlcohol
+
+¿Cuál es la interpretación de cada uno de los coeficientes estimados? ¿Son significativos? ¿El modelo resulta significativo para explicar el peso? ¿Qué porcentaje de la variabilidad explica el modelo?
+
+## 3. Modelo categóricas
+
+Se sugiere probar un modelo que incopore el consumo semanal de snacks y una interacción entre el género y la edad, en lugar de actividad física y consumo de alcohol:
+
+E(peso) = β0 + β1altura + β2edad + β3genero + β4consumoSemanalSnacks + β5genero · edad
+
+Además se pide explícitamente que la categoría "No comí comida salada o snacks en los últimos 7 días" de la variable consumoSemanalSnacks se encuentre como nivel/categoría basal. ¿Cuál es la interpretación de los coeficientes estimados para las categorías de consumoSemanalSnacks y genero . edad? ¿Son significativas? ¿Qué porcentaje de la variabilidad explica el modelo? En caso de detectar que existen categorías no significativas de la variable consumoSemanalSnacks evaluar si la variable es significativa en su conjunto y, en caso afirmativo, proponer una redefinición de las mismas que permita obtener una mayor proporción de categorías significativas individualmente. Luego, analizar si existen cambios en la variabilidad explicada por el modelo.
+
+## 4. Modelos propios y evaluación
+
+Realizar 2 modelos lineales múltiples adicionales y explicar brevemente la lógica detrás de los mismos (se valorará la creación y/o inclusión de variables nuevas). Evaluar la performance del modelo inicial, el modelo categóricas con las categorías redefinidas de la variable consumoSemanalSnacks y los modelos desarrollados en este punto en el dataset de entrenamiento y evaluación (usar dataset "encuesta_salud_test.csv"). La evaluación de performance consiste en comparar en ambos sets la performance en términos del R cuadrado ajustado, RMSE y MAE.
+
+¿Cuál es el mejor modelo para nuestro objetivo de predecir el peso? ¿Por qué?
+
+## 5. Diagnóstico del modelo
+
+Analizar en profundidad el cumplimiento de los supuestos del modelo lineal para el modelo inicial.
+
+## 6. Modelo Robusto
+
+Leer el archivo "encuesta_salud_modelo6.csv". Este último consiste en el dataset original de train con la incorporación de algunas observaciones adicionales que pueden incluir valores atípicos. En particular, observar la relación entre peso y altura ¿Qué ocurre con estos nuevos datos? Entrenar el modelo inicial con estos nuevos datos y comentar qué se observa en los coeficientes estimados y las métricas de evaluación (R cuadrado ajustado, RMSE y MAE) respecto al modelo entrenado con el set de entrenamiento original. Entrenar un modelo robusto con la misma especificación que el modelo inicial sobre los nuevos datos. Comparar los coeficientes y su performance (RMSE y MAE) respecto al modelo inicial no robusto entrenado en este punto. ¿Qué puede concluir al respecto?

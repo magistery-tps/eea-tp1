@@ -36,11 +36,7 @@ import('../src/plot.R')
 ```
 
 ```{r}
-raw_train_set <- load_train_set()
-raw_test_set  <- load_test_set()
-
-train_set <- preprocess(raw_train_set)
-test_set  <- preprocess(raw_test_set)
+train_set <- preprocess(load_train_set())
 ```
 
 ## 1. Análisis exploratorios
@@ -83,7 +79,7 @@ A continuacion abreviamos los valores de la variables categóricas y los llevamo
 
 
 ```{r}
-train_set <- simplify_values(train_set)
+train_set <- shorten_values(train_set)
 show_values(train_set)
 ```
 
@@ -117,7 +113,10 @@ En general.
 Luego, si comparamos las distribuciones por medio de un box-plot comparativo:
 
 ```{r}
-ggplotly(box_plots(train_set))
+box_plots(
+  train_set, 
+  title = 'Comparativas de distribuciones para las variables numéricas'
+)
 ```
 
 Se puede observar que:
@@ -150,7 +149,7 @@ Luego podemos observar que:
 A continuación analizamos las correlaciones entre las variables numéricas:
 
 ```{r}
-corr_plot(train_set)
+corr_plot(train_set, title='Correlación de variables numéricas')
 ```
 
 Observaciones:
@@ -181,72 +180,54 @@ ggplot(train_set, aes(x=genero, y=peso, fill=genero)) + geom_boxplot()
 ```
 Se aprecia que la media del pedo masculino es mayor al femenino, tal vez por una diferencia en su musculatura.
 
-Luego a contiacuon veamo la realacion entre las variables mas importantes.
+Luego a continuación veamos la relación entre las variables mas importantes.
 
 ```{r, out.width="150%"}
 train_set %>% 
   select(c(most_important_variables, peso)) %>%
-  pairs_plot('genero')
+  pairs_plot('genero') +
+  labs(title = 'Correlación de variables mas importantes segmentadas por género')
 ```
 
 Observaciones:
 
-* Se aprecia que los Masculinos tiene una relación mas fuerte entre su altura y el consumo de frutas/verduras que los femeninos. En comprensible que al ser mas altos en promedio requieran mayor alimento. pot otro lado esta relación entiendo no es muy significativa que que también se puede apreciar el el consumo de frutas y verduras es muy parece en ambos sexos.
+* Se aprecia que los Masculinos tiene una relación mas fuerte entre su altura y el consumo de frutas/verduras que los femeninos. En comprensible que al ser mas altos en promedio requieran mayor alimento. Por otro lado, la relación se puede apreciar el consumo de frutas y verduras es muy parece en ambos sexos, esto evidencia que la relación anterior no es muy significativa.
 * La altura parase discriminar bien al peso, ya que ambas distribuciones están muy poco solapadas.
 * Las edades tienen varias moda una por cada  año: 8vo, 9no, 1ro, 2do, y 3ro. las edades están bien balanceadas entre ambos sexos, sus media son prácticamente iguales.
 * Se vuelve a apreciar la relación peso-altura la cual parece estar separada or genero. menor peso y altura para los Femeninos y lo contrario para los Masculinos.
 
 ```{r}
-colnames(train_set)
+mosaic_plot(
+  train_set, 
+  column       = 'frecuencia_hambre_mensual', 
+  segmented_by = 'consumo_semanal_verdura',
+  title        = 'Frecuencia de hambre vs consumo de verduras'
+)
 ```
-
 
 ```{r}
-# ggplot(data = train_set) +
-#   geom_mosaic(
-#    aes(x=frecuencia_hambre_mensual, fill = consumo_semanal_verdura)
-#  ) +
+mosaic_plot(
+  train_set,
+  column       = 'frecuencia_hambre_mensual', 
+  segmented_by = 'consumo_semanal_comida_grasa',
+  title        = 'Frecuencia de hambre vs consumo de grasas'
+)
 ```
-
 
 ```{r}
-one_hot_encode <- function(df) {
-  cat_variables <- cat_vars(train_set)
-  dummy_cols(df,  select_columns = cat_variables) %>% 
-    dplyr::select(-cat_variables)
-}
-
-encoded_train_set <- one_hot_encode(train_set)
-encoded_test_set <- one_hot_encode(test_set)
-encoded_test_set
+mosaic_plot(
+  train_set,
+  column       = 'frecuencia_hambre_mensual', 
+  segmented_by = 'consumo_semanal_frutas',
+  title        = 'Frecuencia de hambre vs consumo de frutas'
+)
 ```
 
-## 2. Modelo inicial
+Observaciones:
 
-Se plantea que una primera alternativa para modelar el peso es:
+* La categoría **Nunca tiene hambre** esta dominada por los que consumen grasas entre 0 y 3 veces por semana. Luego los que consumen mas de 3 veces por semana son muy pocos, lo que indica que a mayor consuma de grasas mas hambre produce.
+* La categoría **Casi simple tiene hambre** tiene una menor cantidad de individuos que consumen grasas entre 0 y 3 veces por día. Esto indica que al consumir mas grasas tiene mas hambre.
+* La categoría **Casi simple tiene hambre** para el consumo de verduras/frutas se aprecia que esta dominada por los que consumen entre o 3 veces a la semana. Esto nos dice que los que consumen pocas verduras/frutas tiene mas hambre ya que consumes mas grasas.
 
-E(peso) = β0+β1altura+β2edad+β3genero+β4diasActividadFisicaSemanal+β5consumoDiarioAlcohol
 
-¿Cuál es la interpretación de cada uno de los coeficientes estimados? ¿Son significativos? ¿El modelo resulta significativo para explicar el peso? ¿Qué porcentaje de la variabilidad explica el modelo?
 
-## 3. Modelo categóricas
-
-Se sugiere probar un modelo que incopore el consumo semanal de snacks y una interacción entre el género y la edad, en lugar de actividad física y consumo de alcohol:
-
-E(peso) = β0 + β1altura + β2edad + β3genero + β4consumoSemanalSnacks + β5genero · edad
-
-Además se pide explícitamente que la categoría "No comí comida salada o snacks en los últimos 7 días" de la variable consumoSemanalSnacks se encuentre como nivel/categoría basal. ¿Cuál es la interpretación de los coeficientes estimados para las categorías de consumoSemanalSnacks y genero . edad? ¿Son significativas? ¿Qué porcentaje de la variabilidad explica el modelo? En caso de detectar que existen categorías no significativas de la variable consumoSemanalSnacks evaluar si la variable es significativa en su conjunto y, en caso afirmativo, proponer una redefinición de las mismas que permita obtener una mayor proporción de categorías significativas individualmente. Luego, analizar si existen cambios en la variabilidad explicada por el modelo.
-
-## 4. Modelos propios y evaluación
-
-Realizar 2 modelos lineales múltiples adicionales y explicar brevemente la lógica detrás de los mismos (se valorará la creación y/o inclusión de variables nuevas). Evaluar la performance del modelo inicial, el modelo categóricas con las categorías redefinidas de la variable consumoSemanalSnacks y los modelos desarrollados en este punto en el dataset de entrenamiento y evaluación (usar dataset "encuesta_salud_test.csv"). La evaluación de performance consiste en comparar en ambos sets la performance en términos del R cuadrado ajustado, RMSE y MAE.
-
-¿Cuál es el mejor modelo para nuestro objetivo de predecir el peso? ¿Por qué?
-
-## 5. Diagnóstico del modelo
-
-Analizar en profundidad el cumplimiento de los supuestos del modelo lineal para el modelo inicial.
-
-## 6. Modelo Robusto
-
-Leer el archivo "encuesta_salud_modelo6.csv". Este último consiste en el dataset original de train con la incorporación de algunas observaciones adicionales que pueden incluir valores atípicos. En particular, observar la relación entre peso y altura ¿Qué ocurre con estos nuevos datos? Entrenar el modelo inicial con estos nuevos datos y comentar qué se observa en los coeficientes estimados y las métricas de evaluación (R cuadrado ajustado, RMSE y MAE) respecto al modelo entrenado con el set de entrenamiento original. Entrenar un modelo robusto con la misma especificación que el modelo inicial sobre los nuevos datos. Comparar los coeficientes y su performance (RMSE y MAE) respecto al modelo inicial no robusto entrenado en este punto. ¿Qué puede concluir al respecto?

@@ -24,7 +24,7 @@ preprocess <- function(df, excluded_variables = c('record')) {
 }
 
 
-simplify_values <- function(df) {
+shorten_values <- function(df) {
   mapping <- load_df_from_csv('../dataset/mapping.csv')
   
   table <- df %>% 
