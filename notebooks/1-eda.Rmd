@@ -138,14 +138,15 @@ bar_plots(train_set)
 ```
 
 Luego podemos observar que:
-* El dataset tiene un sesgo de genero del 15%. Siendo números tan elevados entiendo que podríamos asumir que es un sesgo bajo.
-* 2 año del polimorfo es máximo y 8vo mínimo.
-* Excluyendo a los individuos que nunca tiene hambre las categorías mas importantes son Rara vez y Algunas veces, lo cual entiendo son valores normales.
-* Lo mas frecuente es comenzar a consumir alcohol entre las 12-13  años seguido de 14-15 años. por otro lado en menor porcentaje(-32%) hay una gran cantidad de individuos que no han comenzaron a consumir alcohol. Finalmente en menor medida existen individuos que consumen alcohol antes de los 7 años de edad.
-* La mayor porcentaje de individuos consumen hasta 3 frutas por semana, seguido de aquellos que no consumen.
-* A diferencia de las frutas el consumo de verduras es mayor. Quienes no consumen verduras bajan al a mitad vs frutas. La mayoría consume hasta 3 veces x semana seguido de 4 a 7.
-* La mayoría consume hasta 3 veces pro semana gaseosa y se aprecia un porcentaje importante para aquellos que no consumen. Luego existe un grupo que consume de 4 a 7 días a la semana.
-* La mayoría consume snasks es hasta 3 veces a la semana o no se consume directamente.
+
+  * El dataset tiene un sesgo de genero del 15%. Siendo números tan elevados entiendo que podríamos asumir que es un sesgo bajo.
+  * 2 año del polimorfo es máximo y 8vo mínimo.
+  * Excluyendo a los individuos que nunca tiene hambre las categorías mas importantes son Rara vez y Algunas veces, lo cual entiendo son valores normales.
+  * Lo mas frecuente es comenzar a consumir alcohol entre las 12-13  años seguido de 14-15 años. por otro lado en menor porcentaje(-32%) hay una gran cantidad de individuos que no han comenzaron a consumir alcohol. Finalmente en menor medida existen individuos que consumen alcohol antes de los 7 años de edad.
+  * La mayor porcentaje de individuos consumen hasta 3 frutas por semana, seguido de aquellos que no consumen.
+  * A diferencia de las frutas el consumo de verduras es mayor. Quienes no consumen verduras bajan al a mitad vs frutas. La mayoría consume hasta 3 veces x semana seguido de 4 a 7.
+  * La mayoría consume hasta 3 veces pro semana gaseosa y se aprecia un porcentaje importante para aquellos que no consumen. Luego existe un grupo que consume de 4 a 7 días a la semana.
+  * La mayoría consume snasks es hasta 3 veces a la semana o no se consume directamente.
 
 * Es interesante destacar que los consumos de grasas, snack, gaseosas y frutas, parecen tener 3 grupos similares: en mayor medida los que consumen poco, seguida de lo que no consumen y luego los que consumen una cantidad de mediana a alta.
 
@@ -157,6 +158,7 @@ corr_plot(train_set, title='Correlación de variables numéricas')
 ```
 
 Observaciones:
+
 A primera vista se puede observar que la altura es un facto importante para determinar el peso. Por otro lado se aprecia una relación menor entre el peso y la edad, lo cual es entendible en individuos en crecimiento. Esto ultimo también sucede con la altura y la edad, pero en menor medida. Por ultimo también se aprecia una relación considerable entre la edad y el consumo de alcohol, entendiendo que a mayor edad el consumo de alcohol es mayor(Correlación positiva).
 Final existe una relación muy baja entre el peso y el consumo de alcohol o comida rápida. Esto puede deberse a que en general la mayoría realiza actividad física toda la semana lo cual puede influir a que estas relaciones sean débiles. 
 
