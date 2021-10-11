@@ -5,7 +5,7 @@
 
 * [Consignas](https://github.com/magistery-tps/eea-tp1/blob/master/docs/consignas.pdf)
 * [EDA](https://rpubs.com/adrianmarino/eea-tp1-eda)
-* [Modelos](https://rpubs.com/adrianmarino/eea-tp1-model)
+* [Modelos](https://rpubs.com/adrianmarino/eea-tp1-models)
 
 ## Requisitos
 
