@@ -62,5 +62,59 @@ shorten_values <- function(df) {
     mutate(edad_consumo_alcohol = target) %>% 
     select(-target)
   
+  table$edad_consumo_alcohol <- factor(
+    table$edad_consumo_alcohol,
+    levels=c("0", "<=7", "8-9", "10-11", "12-13", "14-15", "16-17", ">=18"), 
+    ordered=TRUE
+  )
+  
+  table$nivel_educativo <- factor(
+    table$nivel_educativo,
+    levels=c("8", "9", "1", "2", "3"), 
+    ordered=TRUE
+  )
+  
+  table$frecuencia_hambre_mensual <- factor(
+    table$frecuencia_hambre_mensual,
+    levels=c("Nunca", "Rara vez", "Algunas veces", "Casi siempre", "Siempre"), 
+    ordered=TRUE
+  )
+  
+  table$consumo_semanal_frutas <- factor(
+    table$consumo_semanal_frutas,
+    levels=c("0", "<=3", "4-6", "7", "14", "21", ">=28"), 
+    ordered=TRUE
+  )
+  
+  table$consumo_semanal_verdura <- factor(
+    table$consumo_semanal_verdura,
+    levels=c("0", "<=3", "4-6", "7", "14", "21", ">=28"), 
+    ordered=TRUE
+  )
+  
+  table$consumo_semanal_gaseosas <- factor(
+    table$consumo_semanal_gaseosas,
+    levels=c("0", "<=3", "4-6", "7", "14", "21", ">=28"), 
+    ordered=TRUE
+  )
+  
+  table$consumo_semanal_snacks <- factor(
+    table$consumo_semanal_snacks,
+    levels=c("0", "<=3", "4-6", "7", "14", "21", ">=28"), 
+    ordered=TRUE
+  )
+  
+  table$consumo_semanal_comida_grasa <- factor(
+    table$consumo_semanal_comida_grasa,
+    levels=c("0", "<=3", "4-6", "7", "14", "21", ">=28"), 
+    ordered=TRUE
+  )
+
+  table$genero <- factor(
+    table$genero,
+    levels=c("Femenino", "Masculino"), 
+    ordered=FALSE
+  )
+
   table
 }

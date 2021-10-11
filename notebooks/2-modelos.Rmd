@@ -19,43 +19,83 @@ output:
 ---
 
 ```{r}
-cat("\014")
 rm(list=ls())
 gc()
 options(warn=-2)
+cat("\014")
 ```
 
 ```{r}
 # install.packages("pacman")
 library(pacman)
-p_load(tidyverse, fastDummies)
+p_load(tidyverse)
 p_load_gh('adrianmarino/commons')
 import('../src/dataset.R')
 import('../src/preprocessing.R')
-import('../src/plot.R')
+import('../src/model.R')
+cat("\014")
 ```
 
 ```{r}
 train_set <- drop_missings(shorten_values(preprocess(load_train_set())))
 test_set  <- drop_missings(shorten_values(preprocess(load_test_set())))
 
-test_set
+test_set %>%  head()
 ```
-
 
 ## 2. Modelo inicial
 
 Se plantea que una primera alternativa para modelar el peso es:
 
-E(peso) = β0+β1altura+β2edad+β3genero+β4diasActividadFisicaSemanal+β5consumoDiarioAlcohol
+E(peso) = 
+  β0 + 
+  β1 * altura +
+  β2 * edad +
+  β3 * genero +
+  β4 * dias_actividad_fisica_semanal +
+  β5 * consumo_diario_alcohol
 
-¿Cuál es la interpretación de cada uno de los coeficientes estimados? ¿Son significativos? ¿El modelo resulta significativo para explicar el peso? ¿Qué porcentaje de la variabilidad explica el modelo?
+- ¿Cuál es la interpretación de cada uno de los coeficientes estimados? 
+- ¿Son significativos?
+- ¿El modelo resulta significativo para explicar el peso?
+- ¿Qué porcentaje de la variabilidad explica el modelo?
+
+Fijamos semilla y chequeamos las proporciones de los conjuntos:
+```{r}
+set.seed(25)
+
+show_train_test_props(train_set, test_set)
+```
+```{r}
+model_1 <- lm(
+  peso ~ altura + edad + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
+  data = train_set
+)
+model_1_sumamry <- tidy(model_1, conf.int = TRUE)
+model_1_sumamry
+```
 
 ## 3. Modelo categóricas
 
-Se sugiere probar un modelo que incopore el consumo semanal de snacks y una interacción entre el género y la edad, en lugar de actividad física y consumo de alcohol:
+Se sugiere probar un modelo que incorpore el consumo semanal de snacks y una interacción entre el género y la edad, en lugar de actividad física y consumo de alcohol:
 
-E(peso) = β0 + β1altura + β2edad + β3genero + β4consumoSemanalSnacks + β5genero · edad
+E(peso) = 
+  β0 +
+  β1 * altura + 
+  β2 * edad +
+  β3 * genero +
+  β4 * consumoSemanalSnacks +
+  β5 * genero * edad
+  
+  
+```{r}
+model_2 <- lm(
+  peso ~ altura + edad + genero + consumo_semanal_snacks +  genero * edad, 
+  data = train_set
+)
+model_2_sumamry <- tidy(model_2, conf.int = TRUE)
+model_2_sumamry
+```
 
 Además se pide explícitamente que la categoría "No comí comida salada o snacks en los últimos 7 días" de la variable consumoSemanalSnacks se encuentre como nivel/categoría basal. ¿Cuál es la interpretación de los coeficientes estimados para las categorías de consumoSemanalSnacks y genero . edad? ¿Son significativas? ¿Qué porcentaje de la variabilidad explica el modelo? En caso de detectar que existen categorías no significativas de la variable consumoSemanalSnacks evaluar si la variable es significativa en su conjunto y, en caso afirmativo, proponer una redefinición de las mismas que permita obtener una mayor proporción de categorías significativas individualmente. Luego, analizar si existen cambios en la variabilidad explicada por el modelo.
 

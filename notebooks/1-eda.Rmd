@@ -19,20 +19,21 @@ output:
 ---
 
 ```{r}
-cat("\014")
 rm(list=ls())
 gc()
 options(warn=-2)
+cat("\014")
 ```
 
 ```{r}
 # install.packages("pacman")
 library(pacman)
-p_load(tidyverse, fastDummies)
+p_load(tidyverse)
 p_load_gh('adrianmarino/commons')
 import('../src/dataset.R')
 import('../src/preprocessing.R')
 import('../src/plot.R')
+cat("\014")
 ```
 
 ```{r}
