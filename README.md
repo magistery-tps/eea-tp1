@@ -3,9 +3,9 @@
 
 ## TP 1: Regresión lineal
 
-[Consignas](https://github.com/magistery-tps/eea-tp1/blob/master/docs/consignas.pdf)
-[EDA](https://rpubs.com/adrianmarino/eea-tp1-eda)
-[Modelos](https://rpubs.com/adrianmarino/eea-tp1-model)
+* [Consignas](https://github.com/magistery-tps/eea-tp1/blob/master/docs/consignas.pdf)
+* [EDA](https://rpubs.com/adrianmarino/eea-tp1-eda)
+* [Modelos](https://rpubs.com/adrianmarino/eea-tp1-model)
 
 ## Requisitos
 
