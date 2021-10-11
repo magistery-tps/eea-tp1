@@ -3,7 +3,7 @@ title: |
     | Maestría en Explotación de datos y Descubrimiento de conocimiento
     |
     |
-    | Materia: Analisis Estadistico del Aprendizaje
+    | Materia: Enfoque Estadistico del Aprendizaje
     | Trabajo práctico 1: Regresion Lineal
 author: "Adrian Norberto Marino"
 date: "2021/09/19"
@@ -18,14 +18,14 @@ output:
       after_body: ./footer.html
 ---
 
-```{r}
+```{r, results='hide'}
 rm(list=ls())
 gc()
 options(warn=-2)
 cat("\014")
 ```
 
-```{r}
+```{r, results='hide'}
 # install.packages("pacman")
 library(pacman)
 p_load(tidyverse)
@@ -58,23 +58,25 @@ glimpse(train_set)
 Se parecían tanto variable numéricas como categóricas:
 
 Numéricas:
-* edad
-* altura
-* peso
-* dias_consumo_comida_rapida: Dias de consumo de comida rapida por semana.
-* dias_actividad_fisica_semanal
+
+  * edad
+  * altura
+  * peso
+  * dias_consumo_comida_rapida: Dias de consumo de comida rapida por semana.
+  * dias_actividad_fisica_semanal
 
 Categóricas:
-* genero: No orginal.
-* nivel_educativo: De tipo orginal. El orden seria 8, 9, 1, 2, 3 llevándolo a la medida del polimodal.
-* frecuencia_hambre_mensual: De tipo ordinal, Ej.: Siempre es mas de nunca.
-* edad_consumo_alcohol: Entiendo que es la edad en la que se comenzo a consumir alcohol. Es claramente ordinal.
-* consumo_diario_alcohol: Categórica ordinal. Cuando mas se consume mas contraproducente.
-* consumo_semanal_frutas: Categórica ordinal.
-* consumo_semanal_verdura: Categórica ordinal.
-* consumo_semanal_gaseosas: Categórica ordinal.
-* consumo_semanal_snacks: Categórica ordinal.
-* consumo_semanal_comida_grasa: Categórica ordinal.
+
+  * genero: No orginal.
+  * nivel_educativo: De tipo orginal. El orden seria 8, 9, 1, 2, 3 llevándolo a la medida del polimodal.
+  * frecuencia_hambre_mensual: De tipo ordinal, Ej.: Siempre es mas de nunca.
+  * edad_consumo_alcohol: Entiendo que es la edad en la que se comenzo a consumir alcohol. Es claramente ordinal.
+  * consumo_diario_alcohol: Categórica ordinal. Cuando mas se consume mas contraproducente.
+  * consumo_semanal_frutas: Categórica ordinal.
+  * consumo_semanal_verdura: Categórica ordinal.
+  * consumo_semanal_gaseosas: Categórica ordinal.
+  * consumo_semanal_snacks: Categórica ordinal.
+  * consumo_semanal_comida_grasa: Categórica ordinal.
 
 A continuacion abreviamos los valores de la variables categóricas y los llevamos a una unica unidad de media, ya sea veces/semana o veces/día:
 
@@ -103,12 +105,13 @@ hist_plots(train_set)
 ```
 
 Observaciones:
-* La encuesta se realizo en una población de chicos entre 12 y 18 años.
-* La distribución de la edad  y la altura son muy cercanas a la normal.
-* La distribución del peso esta sesgada a derecha, ya que la medio del peso se encuentra en los 50 kg entendiendo se que hay una cierta relación con la edad, donde el peso es menor que en una población adulta.
-* El consumo de comida rápida diario parece ser muy saludable en general que la distribución esta sesgada nuevamente a derecha, indicando que lo mas común es un consuma bajo de comida rápida.
-* En general la mayoría no consume alcohol pero hay un un numero importante que consume 5 veces al día, comprendiendo que son los mayores.
-* Hay un alto porcentaje de individuos que realizar actividad física 2 o 7 días a la semana. siendo un poco mas alto que el porcentaje que no hace ninguna actividad.
+
+  * La encuesta se realizo en una población de chicos entre 12 y 18 años.
+  * La distribución de la edad  y la altura son muy cercanas a la normal.
+  * La distribución del peso esta sesgada a derecha, ya que la medio del peso se encuentra en los 50 kg entendiendo se que hay una cierta relación con la edad, donde el peso es menor que en una población adulta.
+  * El consumo de comida rápida diario parece ser muy saludable en general que la distribución esta sesgada nuevamente a derecha, indicando que lo mas común es un consuma bajo de comida rápida.
+  * En general la mayoría no consume alcohol pero hay un un numero importante que consume 5 veces al día, comprendiendo que son los mayores.
+  * Hay un alto porcentaje de individuos que realizar actividad física 2 o 7 días a la semana. siendo un poco mas alto que el porcentaje que no hace ninguna actividad.
 En general.
 
 Luego, si comparamos las distribuciones por medio de un box-plot comparativo:
@@ -192,10 +195,10 @@ train_set %>%
 
 Observaciones:
 
-* Se aprecia que los Masculinos tiene una relación mas fuerte entre su altura y el consumo de frutas/verduras que los femeninos. En comprensible que al ser mas altos en promedio requieran mayor alimento. Por otro lado, la relación se puede apreciar el consumo de frutas y verduras es muy parece en ambos sexos, esto evidencia que la relación anterior no es muy significativa.
-* La altura parase discriminar bien al peso, ya que ambas distribuciones están muy poco solapadas.
-* Las edades tienen varias moda una por cada  año: 8vo, 9no, 1ro, 2do, y 3ro. las edades están bien balanceadas entre ambos sexos, sus media son prácticamente iguales.
-* Se vuelve a apreciar la relación peso-altura la cual parece estar separada or genero. menor peso y altura para los Femeninos y lo contrario para los Masculinos.
+  * Se aprecia que los Masculinos tiene una relación mas fuerte entre su altura y el consumo de frutas/verduras que los femeninos. En comprensible que al ser mas altos en promedio requieran mayor alimento. Por otro lado, la relación se puede apreciar el consumo de frutas y verduras es muy parece en ambos sexos, esto evidencia que la relación anterior no es muy significativa.
+  * La altura parase discriminar bien al peso, ya que ambas distribuciones están muy poco solapadas.
+  * Las edades tienen varias moda una por cada  año: 8vo, 9no, 1ro, 2do, y 3ro. las edades están bien balanceadas entre ambos sexos, sus media son prácticamente iguales.
+  * Se vuelve a apreciar la relación peso-altura la cual parece estar separada or genero. menor peso y altura para los Femeninos y lo contrario para los Masculinos.
 
 ```{r}
 mosaic_plot(
@@ -226,9 +229,9 @@ mosaic_plot(
 
 Observaciones:
 
-* La categoría **Nunca tiene hambre** esta dominada por los que consumen grasas entre 0 y 3 veces por semana. Luego los que consumen mas de 3 veces por semana son muy pocos, lo que indica que a mayor consuma de grasas mas hambre produce.
-* La categoría **Casi simple tiene hambre** tiene una menor cantidad de individuos que consumen grasas entre 0 y 3 veces por día. Esto indica que al consumir mas grasas tiene mas hambre.
-* La categoría **Casi simple tiene hambre** para el consumo de verduras/frutas se aprecia que esta dominada por los que consumen entre o 3 veces a la semana. Esto nos dice que los que consumen pocas verduras/frutas tiene mas hambre ya que consumes mas grasas.
+  * La categoría **Nunca tiene hambre** esta dominada por los que consumen grasas entre 0 y 3 veces por semana. Luego los que consumen mas de 3 veces por semana son muy pocos, lo que indica que a mayor consuma de grasas mas hambre produce.
+  * La categoría **Casi simple tiene hambre** tiene una menor cantidad de individuos que consumen grasas entre 0 y 3 veces por día. Esto indica que al consumir mas grasas tiene mas hambre.
+  * La categoría **Casi simple tiene hambre** para el consumo de verduras/frutas se aprecia que esta dominada por los que consumen entre o 3 veces a la semana. Esto nos dice que los que consumen pocas verduras/frutas tiene mas hambre ya que consumes mas grasas.
 
 
 

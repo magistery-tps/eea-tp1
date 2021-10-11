@@ -3,7 +3,7 @@ title: |
     | Maestría en Explotación de datos y Descubrimiento de conocimiento
     |
     |
-    | Materia: Analisis Estadistico del Aprendizaje
+    | Materia: Enfoque Estadistico del Aprendizaje
     | Trabajo práctico 1: Regresion Lineal
 author: "Adrian Norberto Marino"
 date: "2021/09/19"
@@ -18,14 +18,14 @@ output:
       after_body: ./footer.html
 ---
 
-```{r}
+```{r, results='hide'}
 rm(list=ls())
 gc()
 options(warn=-2)
 cat("\014")
 ```
 
-```{r}
+```{r, results='hide'}
 # install.packages("pacman")
 library(pacman)
 p_load(tidyverse)
@@ -74,6 +74,7 @@ model_1 <- lm(
 model_1_sumamry <- tidy(model_1, conf.int = TRUE)
 model_1_sumamry
 ```
+
 
 ## 3. Modelo categóricas
 
