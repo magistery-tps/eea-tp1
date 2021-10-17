@@ -2,10 +2,6 @@ library(pacman)
 p_load(tidyverse, dplyr)
 p_load_gh('adrianmarino/commons')
 
-
-import('../src/dataset.R')
-import('../src/preprocessing.R')
-
 mapping_cols = c(
   "consumo_semanal_comida_grasa",
   "consumo_semanal_verdura",

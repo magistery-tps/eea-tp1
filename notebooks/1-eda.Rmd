@@ -64,6 +64,7 @@ Numéricas:
   * peso
   * dias_consumo_comida_rapida: Dias de consumo de comida rapida por semana.
   * dias_actividad_fisica_semanal
+    * consumo_diario_alcohol: Categórica ordinal. Cuando mas se consume mas contraproducente.
 
 Categóricas:
 
@@ -71,7 +72,7 @@ Categóricas:
   * nivel_educativo: De tipo orginal. El orden seria 8, 9, 1, 2, 3 llevándolo a la medida del polimodal.
   * frecuencia_hambre_mensual: De tipo ordinal, Ej.: Siempre es mas de nunca.
   * edad_consumo_alcohol: Entiendo que es la edad en la que se comenzo a consumir alcohol. Es claramente ordinal.
-  * consumo_diario_alcohol: Categórica ordinal. Cuando mas se consume mas contraproducente.
+
   * consumo_semanal_frutas: Categórica ordinal.
   * consumo_semanal_verdura: Categórica ordinal.
   * consumo_semanal_gaseosas: Categórica ordinal.
@@ -226,6 +227,24 @@ mosaic_plot(
   column       = 'frecuencia_hambre_mensual', 
   segmented_by = 'consumo_semanal_frutas',
   title        = 'Frecuencia de hambre vs consumo de frutas'
+)
+```
+
+```{r}
+mosaic_plot(
+  train_set,
+  column       = 'frecuencia_hambre_mensual', 
+  segmented_by = 'consumo_semanal_snacks',
+  title        = 'Frecuencia de hambre vs consumo de snacks'
+)
+```
+
+```{r}
+mosaic_plot(
+  train_set,
+  column       = 'frecuencia_hambre_mensual', 
+  segmented_by = 'consumo_semanal_gaseosas',
+  title        = 'Frecuencia de hambre vs consumo de gaseosas'
 )
 ```
 

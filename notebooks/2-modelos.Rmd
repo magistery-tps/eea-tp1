@@ -28,7 +28,6 @@ cat("\014")
 ```{r, results='hide'}
 # install.packages("pacman")
 library(pacman)
-p_load(tidyverse)
 p_load_gh('adrianmarino/commons')
 import('../src/dataset.R')
 import('../src/preprocessing.R')
@@ -40,25 +39,15 @@ cat("\014")
 train_set <- drop_missings(shorten_values(preprocess(load_train_set())))
 test_set  <- drop_missings(shorten_values(preprocess(load_test_set())))
 
-test_set %>%  head()
+str(train_set)
 ```
 
 ## 2. Modelo inicial
 
 Se plantea que una primera alternativa para modelar el peso es:
 
-E(peso) = 
-  β0 + 
-  β1 * altura +
-  β2 * edad +
-  β3 * genero +
-  β4 * dias_actividad_fisica_semanal +
-  β5 * consumo_diario_alcohol
 
-- ¿Cuál es la interpretación de cada uno de los coeficientes estimados? 
-- ¿Son significativos?
-- ¿El modelo resulta significativo para explicar el peso?
-- ¿Qué porcentaje de la variabilidad explica el modelo?
+$E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + + \beta_3 * genero + \beta4 * dias_actividad_fisica_semanal$
 
 Fijamos semilla y chequeamos las proporciones de los conjuntos:
 ```{r}
@@ -74,6 +63,44 @@ model_1 <- lm(
 model_1_sumamry <- tidy(model_1, conf.int = TRUE)
 model_1_sumamry
 ```
+
+**¿Cuál es la interpretación de cada uno de los coeficientes estimados?**
+
+  - Para comenzar, $\hat{\beta_0}$ (la ordenada al origen) de valor -74.72 Kg, es el peso esperado o promedio de un individuo que tiene cero altura, edad, actividad física y consumo diario de alcohol, lo que cual no es interpretable, ya que que nimiamente una persona tiene que tener una altura superior a cero y no puede tener un peso negativo, pero si podria no realizar actividad física ni consumir alcohol.
+  
+  - El coeficiente $\hat{\beta_1}$ de valor 680 gramos, corresponde a la altura del individuo. Este coeficiente indica que dada una edad, consumo de alcohol diario y días de actividad física semanal fijos, cada incremento en 1 cm adicional en la altura del individuo implica un aumento de su peso esperado o promedio de 680 gramos.
+
+  - El coeficiente $\hat{\beta_2}$ de valor  1.33 Kg, corresponde a la edad del individuo. Este coeficiente indica que dada una altura, días de actividad física y consumo de alcohol diario fijos, cada vez que el individuo cumple año su peso esperado o promedio aumenta en 1.33 kg.
+
+  - El coeficiente $\hat{\beta_3}$ de valor 77.5 gramos, corresponde a a los días de actividad física semanal que realiza el individuo. Este coeficiente indica que dada una altura, edad y consumo de alcohol diario(en tragos) fijos, cada vez que el realiza un día mas de actividad física semanal su peso esperado o promedio disminuye en 77.5 gramos.
+
+  - El coeficiente $\hat{\beta_4}$ de valor -8 gramos, corresponde al nivel de consumo diario de alcohol del individuo. Este coeficiente indica que dada una altura, una edad y días de actividad física semanal fijos, cada vez que el individuo consume un trago de alcohol su peso esperado o promedio disminuye en 8 gramos. A simple vista podrá no llegar a tener sentido, ya que a mayor consumo de alcohol el peso debería aumentar, ya sea por el peso del propio liquido como el peso equivalente en grasas.
+
+
+**¿Son significativos?**
+
+Para determina si los coeficientes son aptos para explicar el peso de un individuo se realiza un test ${T}$ para el cual se evalúan las siguientes hipótesis:
+
+* H0:  ${\beta_i == 0}$
+* H1:  ${\beta_i != 0}$
+
+Si ${\beta_i != 0}$ podemos decir que existe una diferencia estadisticamente significativos del coeficiente ${\beta_i}$ del valor cero, y por lo tanto el coeficiente ${\beta_i}$ explicar la variable ${y}$ (Peso en nuestro caso).
+
+Concluimos que:
+
+* Los coecifientes correspondientes de la (${\beta_1}$) y edad(${\beta_2}$) tienen un p-valor < 0.05. Por lo tanto se rechaza la hipótesis nula y ambos resultan estadistitamente significativas para explicar el peso. Por otro lado también se puede apreciar que los intervalos de confianza (del 95%) de ambos coeficientes no incluyen al cero.
+* Lo contrario sucede con días de actividad física semanal(${\beta_3}$) y consumo de alcohol diario (${\beta_4}$). Ambos no rechazar la hipótesis nula (p-valor > 0.05) y por lo tanto no existe una diferencia significativa del cero y por lo tanto no hay evidencia estadistitamente significativas para explicar el peso.
+
+Completar
+
+**¿El modelo resulta significativo para explicar el peso?**
+
+```{r}
+glance(model_1)
+```
+
+
+**¿Qué porcentaje de la variabilidad explica el modelo?**
 
 
 ## 3. Modelo categóricas
