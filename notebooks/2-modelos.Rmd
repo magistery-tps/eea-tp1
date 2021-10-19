@@ -273,55 +273,9 @@ list('Modelo 1'=model_1, 'Modelo 2'=model_2, 'Modelo 3'=model_3) %>%
   map_df(glance, .id = "model") %>%
   arrange(desc(adj.r.squared))
 ```
-Finalmente se aprecia que la nueva vategorizacion de la variable aumenta el R^2 ajustado al doble.
-
-ANOVA:
-
-* H0: Las medias de todos los grupos son iguales.
-* H1: Existe al menos un par de muestras(o grupos) para los cuales las medias son distintas.
-
-```{r}
-anova_result <- aov(
-  peso ~ consumo_semanal_snacks,
-  data = train_set2
-)
-summary(anova_result)
-```
-
-Se recahza H0 y existe al al menos un par de grupo para los cuales las medias son distintas.
-
-A continuación intentemos armar grupos usando comparación de medias. Primero revisemos lo supeusto de anova para ver si es valido continuar con este análisis:
-
-Las muestras o grupos deben ser homocedasticos:
-
-* H0: Las muestras/subgrupos tienen igual varianza.
-* H1: Al menos hay un par de muestras/subgrupos con varianzas distintas.
-
-```{r}
-p_load(lawstat)
-levene.test(train_set$peso, train_set2$consumo_semanal_snacks)
-```
-Al parece p-value < 0.05 y se rechaza la hipótesis nula, la cual afirma que las varianzas de los grupos con iguales. Finalmente no se cumple el supuesto de homocedastisidad.
-
-Que sucede con la normalidad de los residuos?
-
-```{r}
-ad.test(anova_result$residuals)
-```
-
-Hipótesis
-* H0: Las distribuciones de los residuos son normales.
-* H1: Las distribuciones de los residuos NO son normales.
-
-Se rechaza la hipotesis nula y por lo tanto no hay evidencia para afirmar que las distribuciones de los residuos son normales.
-
-
-
-
-
-
-
-
+Finalmente se aprecia que la nueva categorización de la variable aumenta el R^2 ajustado a casi el doble. Si
+bien esto mejora la capacidad explicativa de al variables y el modelo, en pasos posteriores se deberá determina
+si produce o no overfitting sobre el conjunto de entrenamiento.
 
 
 ## 4. Modelos propios y evaluación
