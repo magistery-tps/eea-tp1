@@ -32,7 +32,7 @@ p_load_gh('adrianmarino/commons')
 import('../src/dataset.R')
 import('../src/preprocessing.R')
 import('../src/model.R')
-cat("\014")
+import('../src/plot.R')
 ```
 
 ```{r}
@@ -60,12 +60,13 @@ model_1 <- lm(
   peso ~ altura + edad + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
   data = train_set
 )
-model_1_sumamry <- tidy(model_1, conf.int = TRUE)
-model_1_sumamry
 ```
 
 **¿Cuál es la interpretación de cada uno de los coeficientes estimados?**
 
+```{r}
+coefficients_summary(model_1)
+```
   - Para comenzar, $\hat{\beta_0}$ (la ordenada al origen) de valor -74.72 Kg, es el peso esperado o promedio de un individuo que tiene cero altura, edad, actividad física y consumo diario de alcohol, lo que cual no es interpretable, ya que que nimiamente una persona tiene que tener una altura superior a cero y no puede tener un peso negativo, pero si podria no realizar actividad física ni consumir alcohol.
   
   - El coeficiente $\hat{\beta_1}$ de valor 680 gramos, corresponde a la altura del individuo. Este coeficiente indica que dada una edad, consumo de alcohol diario y días de actividad física semanal fijos, cada incremento en 1 cm adicional en la altura del individuo implica un aumento de su peso esperado o promedio de 680 gramos.
@@ -81,8 +82,8 @@ model_1_sumamry
 
 Para determina si los coeficientes son aptos para explicar el peso de un individuo se realiza un test ${T}$ para el cual se evalúan las siguientes hipótesis:
 
-* H0:  ${\beta_i == 0}$
-* H1:  ${\beta_i != 0}$
+* ${H_0: \beta_i == 0}$
+* ${H_1: \beta_i != 0}$
 
 Si ${\beta_i != 0}$ podemos decir que existe una diferencia estadisticamente significativos del coeficiente ${\beta_i}$ del valor cero, y por lo tanto el coeficiente ${\beta_i}$ explicar la variable ${y}$ (Peso en nuestro caso).
 
@@ -100,32 +101,228 @@ glance(model_1)
 ```
 
 
+Para determinar si es modelo es significativo para explicar el peso de in individuo para la muestra provista se realiza un test con las siguientes hipótesis:
+
+* $H_0: β_1 = β_2 = · · · = β_{p−1} = 0$
+* $H_1:$ Por lo menos un $β_k$ ($k = 1, 2,..., p−1$) es distinto de 0. 
+
+$H_0$ afirma que no hay vinculo entre la variable ${y}$(Peso) y las variables regresoras, $H_1$ afirma que al menos una de las variables regresoras sirve
+para predecir la variable ${y}$ (Peso).
+
+Veamos los resultados del test
+
+```{r}
+glance(model_1)
+```
+
+Dado que el p-valor < 0.05 e igual a 0, con mucha certeza podemos decir que al menos una de las variables regresoras permite explicar el peso. Ya habíamos visto que en este modelo tenemos dos variables que tiene cierta correlación con el peso (Altura y edad).
+
 **¿Qué porcentaje de la variabilidad explica el modelo?**
 
+Según el R^2 ajustado, este modelo llega a explica el 35% de la variabilidad del dataset de entrenamiento, lo cual no es un valor muy alto pero tampoco es despreciable.
 
 ## 3. Modelo categóricas
 
-Se sugiere probar un modelo que incorpore el consumo semanal de snacks y una interacción entre el género y la edad, en lugar de actividad física y consumo de alcohol:
+Se sugiere probar un modelo que incorpore el consumo semanal de snacks y una interacción entre el género y la edad, en lugar de actividad física y consumo de alcohol.
+Además se pide explicitamente que la categoría "No comí comida salada o snacks en los últimos 7 días" de la variable consumoSemanalSnacks se encuentre como nivel/categoría basal. 
 
-E(peso) = 
-  β0 +
-  β1 * altura + 
-  β2 * edad +
-  β3 * genero +
-  β4 * consumoSemanalSnacks +
-  β5 * genero * edad
-  
-  
+$E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + + \beta_3 * genero + \beta4 * consumo_semanal_snacks + \beta_5 * genero * edad$
+
+Primero definimos cual es la primera categoría en cada factor ya que esta es la que el modelo toma como categoría basal:
+
+```{r}
+train_set$consumo_semanal_snacks <- factor(
+  train_set$consumo_semanal_snacks,
+  levels=c("0","<=3", "4-6",  "7", "14", "21", ">=28"), 
+  ordered=FALSE
+)
+table(train_set$consumo_semanal_snacks)
+```
+```{r}
+table(train_set$genero)
+```
+
 ```{r}
 model_2 <- lm(
   peso ~ altura + edad + genero + consumo_semanal_snacks +  genero * edad, 
   data = train_set
 )
-model_2_sumamry <- tidy(model_2, conf.int = TRUE)
-model_2_sumamry
 ```
 
-Además se pide explícitamente que la categoría "No comí comida salada o snacks en los últimos 7 días" de la variable consumoSemanalSnacks se encuentre como nivel/categoría basal. ¿Cuál es la interpretación de los coeficientes estimados para las categorías de consumoSemanalSnacks y genero . edad? ¿Son significativas? ¿Qué porcentaje de la variabilidad explica el modelo? En caso de detectar que existen categorías no significativas de la variable consumoSemanalSnacks evaluar si la variable es significativa en su conjunto y, en caso afirmativo, proponer una redefinición de las mismas que permita obtener una mayor proporción de categorías significativas individualmente. Luego, analizar si existen cambios en la variabilidad explicada por el modelo.
+```{r}
+coefficients_summary(model_2)
+```
+
+**¿Cuál es la interpretación de los coeficientes estimados para las categorías de consumoSemanalSnacks y genero * edad? ¿Son significativas?**
+
+Si interpretamos los coeficientes que son significativos: 
+
+* La altura y la edad siguen siendo significativos al igual que el modelo anterior solo cambiando sus valores a 0.64 y 1.21.
+
+* Para una altura, edad fijos, la diferencia de peso de los individuos que consumen snacks hasta 3 veces por semana de los que no consumen(Categoría basal) es de -1.436 kgs. Esto a simple vista pareciera no tener sentido, ya que quienes consumen snacks hasta 3 veces x semana tiene menor peso. 
+* Lo mismo sucede con las categorías consumo_semanal_snacks 4-6 y >=28.
+
+**¿Qué porcentaje de la variabilidad explica el modelo? En caso de detectar que existen categorías no significativas de la variable consumoSemanalSnacks evaluar si la variable es significativa en su conjunto y, en caso afirmativo, proponer una redefinición de las mismas que permita obtener una mayor proporción de categorías significativas individualmente. Luego, analizar si existen cambios en la variabilidad explicada por el modelo.**
+
+En el punto anterior se aprecia que las siguientes categorías de **consumo_semanal_snacks** no son significativas:
+
+* 2 veces al día (14 veces/semana)
+* 4 a 6 veces durante los últimos 7 (4 a 6 veces semana)
+* 3 veces al día (21 veces/semana)
+
+Pero si son significativas los extremos:
+* De 1 a 3 veces/semana
+* De 28 o mas veces/semana
+
+A continuación se realiza un Test F para evaluar la significatividad conjunta de las categóricas de la variable  **consumo_semanal_snacks** para explicar el peso.
+
+El Test F, también llamando ANOVA (Análisis de la variarían) se realiza para probar la significatividad conjunta de todos los valores de una variable categórica.
+
+Las hipótesis son las siguientes:
+
+* $H_0: β_q = β_{q+1} = · · · = β_{p−1} = 0$
+
+* $H_1:$ por lo menos uno de los $β_k$ (con $k$ entre $q$ y $p−1$) es tal que $β_k \neq 0$.
+
+Luego si los coeficientes asociados todos los valores de la variable categórica son cero se rechaza la hipótesis nula y por lo tanto la variable no es significartiva para explicar el peso en nuestro caso.
+
+A continuación veremos el p-valor resultado de aplicar el test para cada variable del modelo:
+
+```{r}
+anova_summary(model_2)
+```
+
+Podemos apreciar que el p-value < 0.005 para la variable **consumo_semanal_snacks**. Por lo tanto se rechaza la hipótesis nula y podemos decir en su conjunto resulta estadísticamente significativa para explicar el peso.Luego, como la variable  **consumo_semanal_snacks** es significativa vale la pena redefinirla.
+
+Por otro lado, la combinación de variables genero-edad no es estadísticamente significativa para explicar el peso pero si lo es el genero en forma separada. Edad y altura ya sabíamos en  pasos anteriores que eran significativas.
+
+Veamos a continuación las distribuciones ordenadas por la mediana del peso:
+
+```{r}
+segmented_box_plot(
+  train_set, 
+  column        = 'peso', 
+  segmented_by  = 'consumo_semanal_snacks',
+  title         = 'Consumo de snacks ordenado por la mediana del peso',
+  y_label       = 'Peso (Kg)',
+  y_limits      = c(10, 130),
+  x_label       = 'Consumo de snacks (Veces/Semana)'
+)
+```
+
+A simple vista no parece hacer una gran diferencia, pero si se aprecia que los extremos difieren del los valores centrales.
+
+
+```{r}
+peso_medio_snack = train_set %>% 
+  group_by(consumo_semanal_snacks) %>%
+  summarise(peso_prom = mean(peso))
+
+ggplot(data = peso_medio_snack, aes(x = peso_prom)) + 
+  geom_boxplot(alpha = 0.75, fill="blue") +
+  labs(title = "Peso medio por categoria de consumo de snacks") +
+  labs(x = "Peso medio") +
+  theme_bw()
+
+peso_medio_snack
+```
+
+```{r}
+pesos_consumo_snacks    <- peso_medio_snack$peso_prom
+q1_pesos_consumo_snacks <- quantile(pesos_consumo_snacks)[2]
+q3_pesos_consumo_snacks <- quantile(pesos_consumo_snacks)[4]
+
+quantile(pesos_consumo_snacks)
+```
+
+
+```{r}
+train_set2 <- train_set %>%
+  mutate(
+    consumo_semanal_snacks = case_when(
+      peso <  q1_pesos_consumo_snacks ~ "Bajo",
+      peso >= q3_pesos_consumo_snacks ~ "Alto",
+      TRUE ~ "Medio",
+    )
+)
+
+segmented_box_plot(
+  train_set2, 
+  column        = 'peso', 
+  segmented_by  = 'consumo_semanal_snacks',
+  title         = 'Consumo de snacks ordenado por la mediana del peso',
+  y_label       = 'Peso (Kg)',
+  y_limits      = c(40, 100),
+  x_label       = 'Consumo de snacks (Veces/Semana)'
+)
+```
+
+
+
+```{r}
+model_3 <- lm(
+  peso ~ altura + edad + genero + consumo_semanal_snacks +  genero * edad, 
+  data = train_set2
+)
+
+coefficients_summary(model_3)
+anova_summary(model_3)
+```
+```{r}
+list('Modelo 1'=model_1, 'Modelo 2'=model_2, 'Modelo 3'=model_3) %>% 
+  map_df(glance, .id = "model") %>%
+  arrange(desc(adj.r.squared))
+```
+Finalmente se aprecia que la nueva vategorizacion de la variable aumenta el R^2 ajustado al doble.
+
+ANOVA:
+
+* H0: Las medias de todos los grupos son iguales.
+* H1: Existe al menos un par de muestras(o grupos) para los cuales las medias son distintas.
+
+```{r}
+anova_result <- aov(
+  peso ~ consumo_semanal_snacks,
+  data = train_set2
+)
+summary(anova_result)
+```
+
+Se recahza H0 y existe al al menos un par de grupo para los cuales las medias son distintas.
+
+A continuación intentemos armar grupos usando comparación de medias. Primero revisemos lo supeusto de anova para ver si es valido continuar con este análisis:
+
+Las muestras o grupos deben ser homocedasticos:
+
+* H0: Las muestras/subgrupos tienen igual varianza.
+* H1: Al menos hay un par de muestras/subgrupos con varianzas distintas.
+
+```{r}
+p_load(lawstat)
+levene.test(train_set$peso, train_set2$consumo_semanal_snacks)
+```
+Al parece p-value < 0.05 y se rechaza la hipótesis nula, la cual afirma que las varianzas de los grupos con iguales. Finalmente no se cumple el supuesto de homocedastisidad.
+
+Que sucede con la normalidad de los residuos?
+
+```{r}
+ad.test(anova_result$residuals)
+```
+
+Hipótesis
+* H0: Las distribuciones de los residuos son normales.
+* H1: Las distribuciones de los residuos NO son normales.
+
+Se rechaza la hipotesis nula y por lo tanto no hay evidencia para afirmar que las distribuciones de los residuos son normales.
+
+
+
+
+
+
+
+
+
 
 ## 4. Modelos propios y evaluación
 

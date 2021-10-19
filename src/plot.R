@@ -30,6 +30,24 @@ box_plots <- function(df, title=NULL) {
     labs(title = title)
 }
 
+segmented_box_plot <- function(
+  df, 
+  column, 
+  segmented_by,
+  title    = NULL,
+  y_label  = NULL,
+  x_label  = NULL,
+  y_limits = c(0, 1000)
+) {
+  ggplot(df, aes(x = fct_reorder(!!sym(segmented_by), !!sym(column), .desc = T), y = !!sym(column))) + 
+    geom_boxplot(outlier.shape = NA, alpha = 0.75, aes(fill = !!sym(segmented_by))) + 
+    theme_minimal() + 
+    theme(legend.position = 'none')+
+    labs(y = y_label, x = x_label)  +
+    scale_y_continuous(limits = y_limits) +
+    ggtitle(title) +
+    theme (axis.text.x = element_text(face="italic", colour="dark grey", size = 10, angle = 0))
+}
 
 bar_plots <- function(
   df, 
