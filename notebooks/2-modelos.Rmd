@@ -246,11 +246,21 @@ train_set2 <- train_set %>%
     )
 )
 
+test_set2 <- test_set %>%
+  mutate(
+    consumo_semanal_snacks = case_when(
+      peso <  q1_pesos_consumo_snacks ~ "Bajo",
+      peso >= q3_pesos_consumo_snacks ~ "Alto",
+      TRUE ~ "Medio",
+    )
+  ) %>% 
+  mutate(consumo_semanal_snacks = as.factor(consumo_semanal_snacks))
+
 segmented_box_plot(
-  train_set2, 
+  test_set2, 
   column        = 'peso', 
   segmented_by  = 'consumo_semanal_snacks',
-  title         = 'Consumo de snacks ordenado por la mediana del peso',
+  title         = 'Consumo de snacks ordenado por la mediana del peso en Test',
   y_label       = 'Peso (Kg)',
   y_limits      = c(40, 100),
   x_label       = 'Consumo de snacks (Veces/Semana)'
@@ -269,7 +279,9 @@ coefficients_summary(model_3)
 anova_summary(model_3)
 ```
 ```{r}
-list('Modelo 1'=model_1, 'Modelo 2'=model_2, 'Modelo 3'=model_3) %>% 
+models <- list('Modelo 1'=model_1, 'Modelo 2'=model_2, 'Modelo 3'=model_3)
+
+models %>% 
   map_df(glance, .id = "model") %>%
   arrange(desc(adj.r.squared))
 ```
@@ -281,6 +293,99 @@ si produce o no overfitting sobre el conjunto de entrenamiento.
 ## 4. Modelos propios y evaluación
 
 Realizar 2 modelos lineales múltiples adicionales y explicar brevemente la lógica detrás de los mismos (se valorará la creación y/o inclusión de variables nuevas). Evaluar la performance del modelo inicial, el modelo categóricas con las categorías redefinidas de la variable consumoSemanalSnacks y los modelos desarrollados en este punto en el dataset de entrenamiento y evaluación (usar dataset "encuesta_salud_test.csv"). La evaluación de performance consiste en comparar en ambos sets la performance en términos del R cuadrado ajustado, RMSE y MAE.
+
+```{r}
+model_4 <- lm(
+  peso~ 
+    altura + 
+    edad + 
+    genero + 
+    consumo_semanal_snacks +
+    dias_actividad_fisica_semanal +
+    altura*genero,
+  data = train_set2
+)
+
+coefficients_summary(model_4)
+anova_summary(model_4)
+glance(model_4)
+```
+
+
+```{r}
+train_set3 <- column_mean_quantile_binning(train_set2, 'dias_actividad_fisica_semanal')
+test_set3  <- column_mean_quantile_binning(test_set2,  'dias_actividad_fisica_semanal')
+
+train_set3 <- column_mean_quantile_binning(train_set3, 'consumo_semanal_frutas')
+test_set3  <- column_mean_quantile_binning(test_set3,  'consumo_semanal_frutas')
+
+train_set3 <- column_mean_quantile_binning(train_set3, 'consumo_semanal_verdura')
+test_set3  <- column_mean_quantile_binning(test_set3,  'consumo_semanal_verdura')
+
+train_set3 <- column_mean_quantile_binning(train_set3, 'consumo_semanal_comida_grasa')
+test_set3  <- column_mean_quantile_binning(test_set3,  'consumo_semanal_comida_grasa')
+
+train_set3 <- column_mean_quantile_binning(train_set3, 'consumo_semanal_gaseosas')
+test_set3  <- column_mean_quantile_binning(test_set3,  'consumo_semanal_gaseosas')
+
+segmented_box_plot(
+  test_set3, 
+  column        = 'peso', 
+  segmented_by  = 'dias_actividad_fisica_semanal',
+  title         = 'Niveles actividad fisica ordenados por la mediana del peso en Test',
+  y_label       = 'Peso (Kg)',
+  y_limits      = c(40, 100),
+  x_label       = 'Niveles de actividad física (Dias)'
+)
+```
+
+
+
+
+```{r}
+model_5 <- lm(
+  peso ~ 
+  edad +
+  genero +
+  altura +
+  consumo_semanal_snacks +
+  dias_actividad_fisica_semanal + 
+  genero*altura,
+  data = train_set3
+)
+
+coefficients_summary(model_5)
+anova_summary(model_5)
+glance(model_5)
+```
+
+
+
+```{r}
+c(models, list('Modelo 4'=model_4, 'Modelo 5'=model_5)) %>% 
+  map_df(glance, .id = "model") %>%
+  arrange(desc(adj.r.squared))
+```
+
+
+```{r}
+models_evaluation_summary(
+  model_1, model_2, model_3, model_4, model_5,
+  test_set, test_set2, test_set3,
+  metric_fn = rmse
+)
+```
+
+
+```{r}
+models_evaluation_summary(
+  model_1, model_2, model_3, model_4, model_5,
+  test_set, test_set2, test_set3,
+  metric_fn = mae
+)
+```
+
+
 
 ¿Cuál es el mejor modelo para nuestro objetivo de predecir el peso? ¿Por qué?
 

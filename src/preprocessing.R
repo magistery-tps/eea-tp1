@@ -114,3 +114,23 @@ shorten_values <- function(df) {
 
   table
 }
+
+column_mean_quantile_binning <- function(
+  df,
+  column,
+  mean_column = 'peso',
+  levels      = c('Bajo', 'Medio', 'Alto')
+) {
+  mean_df <- df %>% 
+    group_by(!!sym(column)) %>%
+    summarise(mean_col = mean(!!sym(mean_column)))
+  
+  df %>%
+    mutate(
+      !!column :=  case_when(
+        !!sym(mean_column) <  quantile(mean_df$mean_col)[2] ~ levels[1],
+        !!sym(mean_column) >= quantile(mean_df$mean_col)[4] ~ levels[3],
+        TRUE ~ levels[2]
+      )
+    )
+}
