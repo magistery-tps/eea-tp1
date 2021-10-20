@@ -385,13 +385,30 @@ models_evaluation_summary(
 )
 ```
 
+**¿Cuál es el mejor modelo para nuestro objetivo de predecir el peso? ¿Por qué?**
 
 
-¿Cuál es el mejor modelo para nuestro objetivo de predecir el peso? ¿Por qué?
+Completar
+
 
 ## 5. Diagnóstico del modelo
 
 Analizar en profundidad el cumplimiento de los supuestos del modelo lineal para el modelo inicial.
+
+
+```{r}
+plot(model_1)
+```
+
+```{r}
+augment(model_1) %>%
+  filter(.hat>0.00245) %>%
+  arrange(.hat)
+```
+
+
+Completar
+
 
 ## 6. Modelo Robusto
 
