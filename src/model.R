@@ -12,6 +12,19 @@ show_train_test_props <- function(train_set, test_set) {
 }
 
 model_coefficients_summary <- function(df, p_value_threshold=0.05) {
+  if(!("p.value" %in% colnames(df))) {
+    print("WARN: p.value column is required!\n");
+    return()  
+  }
+  if(!("conf.low" %in% colnames(df))) {
+    print("WARN: conf.low column is required!\n");
+    return()
+  }
+  if(!("conf.high" %in% colnames(df))) {
+    print("WARN: conf.high column is required!\n");
+    return()
+  }
+
   df %>% 
     mutate(
       Signiticativo = ifelse(p.value < p_value_threshold, "Si", "No"),
@@ -22,6 +35,19 @@ model_coefficients_summary <- function(df, p_value_threshold=0.05) {
 }
 
 plot_tidy_coefficients <- function(df) {
+  if(!("p.value" %in% colnames(df))) {
+    print("WARN: p.value column is required!\n");
+    return()  
+  }
+  if(!("conf.low" %in% colnames(df))) {
+    print("WARN: conf.low column is required!\n");
+    return()
+  }
+  if(!("conf.high" %in% colnames(df))) {
+    print("WARN: conf.high column is required!\n");
+    return()
+  }
+  
   ggplot(
     df %>% arrange(p.value), 
     aes(estimate, term, xmin = conf.low, xmax = conf.high, height = 0)
@@ -39,8 +65,7 @@ coefficients_summary <- function(model) {
   tidy_sumamry <- tidy(model, conf.int = TRUE)
   print(tidy_sumamry)
   
-  model_coefficients_summary <- model_coefficients_summary(tidy_sumamry)
-  print(model_coefficients_summary)
+  print(model_coefficients_summary(tidy_sumamry))
 
   plot_tidy_coefficients(tidy_sumamry)
 }
@@ -68,11 +93,11 @@ eval_metric_summary <- function(
     estimate = .fitted, 
     .id="model"
   ) %>% 
-    select(model, .estimate) %>%
-    arrange(.estimate)
+    dplyr::select(model, .estimate) %>%
+    dplyr::arrange(.estimate)
 }
 
-models_evaluation_summary <- function(
+custom_models_evaluation_summary <- function(
   model_1, model_2, model_3, model_4, model_5,
   test_set, test_set2, test_set3,
   metric_fn
@@ -109,5 +134,19 @@ models_evaluation_summary <- function(
     inner_join(train_sumary, by='model') %>%
     mutate(metric_diff =  abs(test_metric -train_metric)) %>%
     arrange(metric_diff, test_metric)
+}
+
+
+models_evaluation_summary <- function(models, test_set, metric_fn = rmse) {
+  train_sumary <- eval_metric_summary(models, metric_fn = metric_fn) %>% 
+    rename(train_metric = .estimate)
+  
+  test_sumary  <- eval_metric_summary(models, test_set, metric_fn = metric_fn) %>%
+    rename(test_metric = .estimate)
+
+  train_sumary %>% 
+      inner_join(test_sumary, by='model') %>%
+      mutate(metric_diff =  abs(train_metric -test_metric)) %>%
+      arrange(metric_diff, test_metric)
 }
 

@@ -95,9 +95,12 @@ missings_summary(train_set)
 Se aprecia que solo 7 variables tiene faltantes y el valor máximo en un 1.4% del total para nivel educativo. En este análisis no vamos a optar por completar valores y optiamos por eliminarlos ya que es un porcentaje muy bajo.
 
 ```{r}
+nrow(train_set)
 train_set <- drop_missings(train_set)
+nrow(train_set)
 missings_summary(train_set)
 ```
+
 
 A continuación vamos a analizar cada variable por separados comenzando por la variables numéricas:
 

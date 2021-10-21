@@ -47,7 +47,7 @@ str(train_set)
 Se plantea que una primera alternativa para modelar el peso es:
 
 
-$E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + + \beta_3 * genero + \beta4 * dias_actividad_fisica_semanal$
+$E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + \beta_3 * genero + \beta4 * dias_actividad_fisica_semanal +  + \beta4 * consumo_diario_alcohol$
 
 Fijamos semilla y chequeamos las proporciones de los conjuntos:
 ```{r}
@@ -369,7 +369,7 @@ c(models, list('Modelo 4'=model_4, 'Modelo 5'=model_5)) %>%
 
 
 ```{r}
-models_evaluation_summary(
+custom_models_evaluation_summary(
   model_1, model_2, model_3, model_4, model_5,
   test_set, test_set2, test_set3,
   metric_fn = rmse
@@ -378,7 +378,7 @@ models_evaluation_summary(
 
 
 ```{r}
-models_evaluation_summary(
+custom_models_evaluation_summary(
   model_1, model_2, model_3, model_4, model_5,
   test_set, test_set2, test_set3,
   metric_fn = mae
@@ -431,8 +431,67 @@ nrow(new_train_set)
 
 ```{r}
 box_plots(
-  train_set, 
-  title = 'Comparativas de distribuciones para las variables numéricas'
+  train_set %>% select(peso, altura), 
+  title = 'Comparativas de distribuciones del peso y la altura'
+)
+
+box_plots(
+  new_train_set %>% select(peso, altura), 
+  title = 'Comparativas de distribuciones del peso y la altura'
 )
 ```
+
+En el dataset de test original la variable peso tiene practicamente el doble de outliers que el dataset procesasdo.
+
+
+```{r}
+model_1_1 <- lm(
+  peso ~ altura + edad + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
+  data = new_train_set
+)
+
+coefficients_summary(model_1_1)
+anova_summary(model_1_1)
+glance(model_1_1)
+```
+
+```{r}
+print(paste('Disminicion de adj.r.squared:', abs(0.352113 - 0.2734821) * 100, '%'))
+```
+
+Dada la presencia de outliers en la variable peso, el R^2 ajustado baja con respecto al modelo inicial.
+
+```{r}
+models <- list('Modelo 1_1'=model_1_1)
+
+models_evaluation_summary(models, train_set, metric_fn = rmse)
+models_evaluation_summary(models, train_set, metric_fn = mae)
+```
+
+Por otro lado, aumento el error de predicción tanto en train como en test. Finalmente, el modelo tiene un grado de overfitting mucho mayor que los modelos anteriores, ya que la métrica de evaluación en test y train tiene una diferencia muy pronunciada de 1.7 puntos.
+
+Pregunta: A que se refiere con entrenar un modelo robusto con las misma especificaciones del modelo inicial????
+
+
+```{r}
+p_load(MASS)
+
+model_1_2 <- rlm(
+  peso ~ altura + edad + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
+  data = new_train_set
+)
+coefficients_summary(model_1_2)
+anova_summary(model_1_2)
+glance(model_1_2)
+```
+
+
+```{r}
+models <- list('Modelo 1_1'=model_1_1, 'Modelo 1_2'=model_1_2)
+
+models_evaluation_summary(models, test_set, metric_fn = rmse)
+models_evaluation_summary(models, test_set, metric_fn = mae)
+```
+
+
 

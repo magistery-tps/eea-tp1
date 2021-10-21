@@ -36,16 +36,19 @@ missings_columns <- function(ds, max_col_missings = 0.5) {
 }
 
 drop_missings <- function(df, special_missings = c('Dato perdido'), max_col_missings = 0.5) {
-  table <- df %>% drop_na()
-  column_names <- table %>% colnames()
+  mising_column_names <- df %>% missings_columns()
+  column_names        <- setdiff(df %>% colnames(), mising_column_names)
 
+  table <- df
   for(col in  column_names) {
     for(missing in special_missings) {
       table <- table %>% filter(!grepl(missing, !!sym(col)))
     }
   }
-  
-  table
+
+  table %>% 
+    select(-mising_column_names) %>% 
+    drop_na()
 }
 
 show_values <- function(df , columns=c()) {
