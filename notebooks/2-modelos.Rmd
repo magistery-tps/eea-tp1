@@ -544,16 +544,13 @@ que no se cumple el supuesto de normalidad del modelo.
 
 Apalancamiento (Leverage)
 
-```{}
-```
-
 Si observamos el gráfico de **Residuos vs Apalacamiento** vemos que varias observaciones o
 individuos que se alejan del cumulo de principal. Estos ejercen un apuntalamiento sobre el valores
-predicho del modelo a partir de un apalancamiento(leverage) 0.0020 y es mas pronunciado desde 0.0025. Finalmente
-vemos un grado importante de desvió de las predicciones vs su vor esperado.
+predicho del modelo a partir de un apalancamiento(leverage) 0.0020 y es mas pronunciado desde
+0.0025. Finalmente vemos un grado importante de desvió de las predicciones vs su vor esperado.
 
-A continuación se pueden ver lo individuos que producen mayor apalancamiento(leverage) y por ende sesgo en al
-predicción del modelo:
+A continuación se pueden ver lo individuos que producen mayor apalancamiento(leverage) y por ende
+sesgo en al predicción del modelo:
 
 ```{r}
 augment(model_1) %>%
@@ -572,6 +569,10 @@ entrenamiento original. Entrenar un modelo robusto con la misma especificación 
 sobre los nuevos datos. Comparar los coeficientes y su performance (RMSE y MAE) respecto al modelo
 inicial no robusto entrenado en este punto. ¿Qué puede concluir al respecto?
 
+Se carga el conjunto de entrenamiento en crudo,e s decir sin pre-procesamiento. Luego se resumen los
+valores de las variables categóricas y se eliminan missing values, ya que siguen siendo muy poco
+casos:
+
 ```{r}
 original_train_set <- shorten_values(preprocess(load_original_train_set()))
 missings_summary(original_train_set)
@@ -583,6 +584,8 @@ missings_summary(new_train_set)
 nrow(original_train_set)
 nrow(new_train_set)
 ```
+
+Comparemos las distribuciones del peso vs altura en ambos conjunto de entrenamiento:
 
 ```{r}
 box_plots(
@@ -596,29 +599,33 @@ box_plots(
 )
 ```
 
-En el dataset de test original la variable peso tiene practicamente el doble de outliers que el
-dataset procesasdo.
+En el dataset de entrenamiento original la variable peso tiene practicamente el doble de outliers
+que el dataset procesasdo.
+
+**Modelo 6**
+
+Definimos un modelo igual al **modelo 1** pero entrenando en el dataset de entrenamiento original.
 
 ```{r}
-model_1_1 <- lm(
+model_6 <- lm(
   peso ~ altura + edad + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
   data = new_train_set
 )
 
-coefficients_summary(model_1_1)
-anova_summary(model_1_1)
-glance(model_1_1)
+coefficients_summary(model_6)
+anova_summary(model_6)
+glance(model_6)
 ```
 
 ```{r}
 print(paste('Disminicion de adj.r.squared:', abs(0.352113 - 0.2734821) * 100, '%'))
 ```
 
-Dada la presencia de outliers en la variable peso, el R\^2 ajustado baja con respecto al modelo
-inicial.
+Dada la presencia de outliers en la variable peso, el $R^2$ Ajustado baja con respecto al **modelo
+1**.
 
 ```{r}
-models <- list('Modelo 1_1'=model_1_1)
+models <- list('Modelo 6'=model_6)
 
 models_evaluation_summary(models, train_set, metric_fn = rmse)
 models_evaluation_summary(models, train_set, metric_fn = mae)
@@ -628,22 +635,21 @@ Por otro lado, aumento el error de predicción tanto en train como en test. Fina
 tiene un grado de overfitting mucho mayor que los modelos anteriores, ya que la métrica de
 evaluación en test y train tiene una diferencia muy pronunciada de 1.7 puntos.
 
-Pregunta: A que se refiere con entrenar un modelo robusto con las misma especificaciones del modelo
-inicial????
+**Modelo 7**
 
 ```{r}
 p_load(MASS)
 
-model_1_2 <- rlm(
+model_7 <- rlm(
   peso ~ altura + edad + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
   data = new_train_set
 )
-coefficients_summary(model_1_2)
-anova_summary(model_1_2)
+coefficients_summary(model_7)
+anova_summary(model_7)
 ```
 
 ```{r}
-models <- list('Modelo 1_1'=model_1_1, 'Modelo 1_2'=model_1_2)
+models <- list('Modelo 6'=model_6, 'Modelo 7'=model_7)
 
 models_evaluation_summary(models, test_set, metric_fn = rmse)
 models_evaluation_summary(models, test_set, metric_fn = mae)
