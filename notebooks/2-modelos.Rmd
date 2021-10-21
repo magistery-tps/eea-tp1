@@ -637,6 +637,9 @@ evaluación en test y train tiene una diferencia muy pronunciada de 1.7 puntos.
 
 **Modelo 7**
 
+Definimos un modelo igual al **modelo 1** entrenando en el dataset de entrenamiento original y
+usamos un modelo lineal robusto.
+
 ```{r}
 p_load(MASS)
 
@@ -654,3 +657,9 @@ models <- list('Modelo 6'=model_6, 'Modelo 7'=model_7)
 models_evaluation_summary(models, test_set, metric_fn = rmse)
 models_evaluation_summary(models, test_set, metric_fn = mae)
 ```
+
+El modelo lineal robusto (Modelo 7) parece tener un menor error de entrenamiento muy cercano al
+modelo 6, pero tiene mayor sobre- ajuste que el modelo 6, aunque es una diferencia muy baja.
+
+Dado esto, seria una buena selecciono elegir el modelo 7, ya que el sobre ajuste practicamente no
+cambia y obtenemos un error de predicción en test ligeramente menor.
