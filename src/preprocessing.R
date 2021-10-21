@@ -132,6 +132,7 @@ column_mean_quantile_binning <- function(
         !!sym(mean_column) >= quantile(mean_df$mean_col)[4] ~ levels[3],
         TRUE ~ levels[2]
       )
-    )
+    ) %>% 
+    mutate(!!column := as.factor(!!sym(column)))
 }
 

@@ -19,10 +19,12 @@ output:
 ---
 
 ```{r, results='hide'}
+options(warn=-1)
 rm(list=ls())
 gc()
 options(warn=-2)
-cat("\014")
+clean <- function() { cat("\014") }
+clean()
 ```
 
 ```{r, results='hide'}
@@ -33,7 +35,7 @@ p_load_gh('adrianmarino/commons')
 import('../src/dataset.R')
 import('../src/preprocessing.R')
 import('../src/plot.R')
-cat("\014")
+clean()
 ```
 
 ```{r}
