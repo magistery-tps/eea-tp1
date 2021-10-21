@@ -525,13 +525,41 @@ Analizar en profundidad el cumplimiento de los supuestos del modelo lineal para 
 plot(model_1)
 ```
 
+**Homosedastisidad**
+
+Al visualizar el primer gráfico (Residuos vs. Valores ajustados) se puede apreciar que no hay
+presencia de homocedastrisisdad, ya que los valores predicho, la variabilidad o amplitud de los
+residuos parece mantenese con cierta regularidad. Dadas esta condiciones podemos decir que se cumple
+el supuesto de variánza constante.
+
+Normalidad
+
+Al visualizar el diagrama **QQ-Plot** podemos observas que en el extremo derecha, el modelo sobre
+estima el peso del los individuos ya que hay una gran diferencia positiva entre el valor predicho y
+el valor esperado teórico. lo mis sucede a izquierca pero en menor medida, donde el modelo subestima
+el valor de peso en comparacion al valor esperado teórico. Como dato adiciona este grafito
+corresponde a una districión sesgada a derecha, también conocido como sesgo positivo. Finalmente el
+QQ-Plot no muestra un grado de alejamiento pronunciado de una dsitricion normal teórica y decimos
+que no se cumple el supuesto de normalidad del modelo.
+
+Apalancamiento (Leverage)
+
+```{}
+```
+
+Si observamos el gráfico de **Residuos vs Apalacamiento** vemos que varias observaciones o
+individuos que se alejan del cumulo de principal. Estos ejercen un apuntalamiento sobre el valores
+predicho del modelo a partir de un apalancamiento(leverage) 0.0020 y es mas pronunciado desde 0.0025. Finalmente
+vemos un grado importante de desvió de las predicciones vs su vor esperado.
+
+A continuación se pueden ver lo individuos que producen mayor apalancamiento(leverage) y por ende sesgo en al
+predicción del modelo:
+
 ```{r}
 augment(model_1) %>%
   filter(.hat>0.00245) %>%
   arrange(.hat)
 ```
-
-Completar
 
 ## 6. Modelo Robusto
 
