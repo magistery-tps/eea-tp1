@@ -412,4 +412,27 @@ Completar
 
 ## 6. Modelo Robusto
 
-Leer el archivo "encuesta_salud_modelo6.csv". Este último consiste en el dataset original de train con la incorporación de algunas observaciones adicionales que pueden incluir valores atípicos. En particular, observar la relación entre peso y altura ¿Qué ocurre con estos nuevos datos? Entrenar el modelo inicial con estos nuevos datos y comentar qué se observa en los coeficientes estimados y las métricas de evaluación (R cuadrado ajustado, RMSE y MAE) respecto al modelo entrenado con el set de entrenamiento original. Entrenar un modelo robusto con la misma especificación que el modelo inicial sobre los nuevos datos. Comparar los coeficientes y su performance (RMSE y MAE) respecto al modelo inicial no robusto entrenado en este punto. ¿Qué puede concluir al respecto?
+Leer el archivo "encuesta_salud_modelo6.csv". Este último consiste en el dataset original de train con la incorporación de algunas observaciones adicionales que pueden incluir valores atípicos. 
+En particular, observar la relación entre peso y altura ¿Qué ocurre con estos nuevos datos? Entrenar el modelo inicial con estos nuevos datos y comentar qué se observa en los coeficientes estimados y las métricas de evaluación (R cuadrado ajustado, RMSE y MAE) respecto al modelo entrenado con el set de entrenamiento original. Entrenar un modelo robusto con la misma especificación que el modelo inicial sobre los nuevos datos. Comparar los coeficientes y su performance (RMSE y MAE) respecto al modelo inicial no robusto entrenado en este punto. ¿Qué puede concluir al respecto?
+
+
+```{r}
+original_train_set <- shorten_values(preprocess(load_original_train_set()))
+missings_summary(original_train_set)
+new_train_set <- drop_missings(original_train_set)
+missings_summary(new_train_set)
+```
+
+```{r}
+nrow(original_train_set)
+nrow(new_train_set)
+```
+
+
+```{r}
+box_plots(
+  train_set, 
+  title = 'Comparativas de distribuciones para las variables numéricas'
+)
+```
+

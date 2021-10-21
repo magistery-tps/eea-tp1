@@ -99,7 +99,7 @@ train_set <- drop_missings(train_set)
 missings_summary(train_set)
 ```
 
-A continuación vamos a analizar cada variable por separados comienzaond por la variables numéricas:
+A continuación vamos a analizar cada variable por separados comenzando por la variables numéricas:
 
 ```{r}
 hist_plots(train_set)

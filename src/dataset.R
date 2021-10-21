@@ -4,8 +4,9 @@ p_load_gh('adrianmarino/commons')
 
 target_column <- 'peso'
 
-load_train_set <- function() load_df_from_csv('../dataset/encuesta_salud_train.csv')
-load_test_set  <- function() load_df_from_csv('../dataset/encuesta_salud_test.csv')
+load_train_set          <- function() load_df_from_csv('../dataset/encuesta_salud_train.csv')
+load_original_train_set <- function() load_df_from_csv('../dataset/encuesta_salud_modelo6.csv')
+load_test_set           <- function() load_df_from_csv('../dataset/encuesta_salud_test.csv')
 
 feat <- function(df) features(df, target_column)
 tar  <- function(df) target(df, target_column)
@@ -27,15 +28,23 @@ missings_summary <- function(
     arrange(desc(`% Faltantes`), `Nª Categorias`)
 }
 
-drop_missings <- function(df, special_missings = c('Dato perdido')) {
+missings_columns <- function(ds, max_col_missings = 0.5) {
+  missings_summary(ds) %>% 
+    filter(`% Faltantes` > (max_col_missings * 100)) %>%
+    select(Variable) %>%
+    pull()
+}
+
+drop_missings <- function(df, special_missings = c('Dato perdido'), max_col_missings = 0.5) {
   table <- df %>% drop_na()
   column_names <- table %>% colnames()
-  
+
   for(col in  column_names) {
     for(missing in special_missings) {
       table <- table %>% filter(!grepl(missing, !!sym(col)))
     }
   }
+  
   table
 }
 
