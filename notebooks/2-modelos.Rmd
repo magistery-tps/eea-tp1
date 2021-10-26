@@ -318,81 +318,110 @@ Por otro lado, la combinación de variables genero-edad no es estadísticamente 
 explicar el peso, pero si lo es el genero en forma separada. Finalmente, como ya vimos en pasos
 anteriores, edad y altura son significativas.
 
+**Primera opción de redefinición**
 
+Dado que no todas las categorías de la variable **consumo_semanal_snacks** sin significativas a continuación 
+se propone una re-definición de sus categorías que hace que todas ellas sean significativas para el **modelo 2**.
 
-
-Veamos a continuación las distribuciones de las categorías de la variable **consumo_semanal_snacks**
-ordenadas por la mediana del peso:
-
-```{r fig.height=4, fig.width=6, warning=FALSE, fig.align='center'}
-segmented_box_plot(
-  train_set, 
-  column        = 'peso', 
-  segmented_by  = 'consumo_semanal_snacks',
-  title         = 'Consumo de snacks ordenado por la mediana del peso',
-  y_label       = 'Peso (Kg)',
-  y_limits      = c(10, 130),
-  x_label       = 'Consumo de snacks (Veces/Semana)'
+```{r}
+train_set_snack <- train_set %>% mutate(consumo_semanal_snacks = case_when(
+  consumo_semanal_snacks %in% c('<=3', '4-6' , '7')  ~ '<=7',
+  consumo_semanal_snacks %in% c('14', '21', '>=28')  ~ '>=14',
+  TRUE ~ as.character(consumo_semanal_snacks)
+))
+train_set_snack$consumo_semanal_snacks <- factor(
+  train_set_snack$consumo_semanal_snacks,
+  levels=c('0', '<=7', '>=14'), 
+  ordered=FALSE
 )
+table(train_set_snack$consumo_semanal_snacks) 
 ```
 
-A simple vista no parece haber una gran diferencia, pero si se aprecia que los extremos difieren del
-los valores centrales.
 
-A continua con se promane una nueva definición de la variable **consumo_semanal_snacks**. Primero se
-realiza el promediodel peso para cada categoría de la variable **consumo_semanal_snacks**:
+```{r}
+model_snacks <- lm(
+  peso ~ altura + edad + genero + consumo_semanal_snacks +  genero * edad, 
+  data = train_set_snack
+)
+
+coefficients_summary(model_snacks)
+anova_summary(model_snacks)
+glance(model_snacks)
+```
+
+**Segunda opción de re-definición**
+
 
 ```{r fig.height=2, fig.width=4, warning=FALSE, fig.align='center'}
-peso_medio_by_nivel_consumo_snack = train_set %>% 
-  group_by(consumo_semanal_snacks) %>%
-  summarise(promedio = mean(peso))
+train_set_snack_2 <- train_set %>% 
+  mutate(alt_edad_ratio = round(altura/edad, 0))
 
-ggplot(data = peso_medio_by_nivel_consumo_snack, aes(x = promedio)) + 
+avg_train_set_snack_2 <- train_set_snack_2 %>% 
+   group_by(consumo_semanal_snacks) %>% 
+   summarise(avg_alt_edad_ratio = mean(alt_edad_ratio))
+
+ggplot(data = avg_train_set_snack_2, aes(x = avg_alt_edad_ratio)) + 
   geom_boxplot(alpha = 0.75, fill="blue") +
-  labs(title = "Peso promedio por cada categoria de consumo de snacks") +
-  labs(x = "Peso medio") +
   theme_bw()
 ```
 
-```{r}
-peso_medio_by_nivel_consumo_snack  <- peso_medio_by_nivel_consumo_snack$promedio
 
-peso_medio_by_nivel_consumo_snack
-quantile(peso_medio_by_nivel_consumo_snack)
+```{r}
+quantiles_avg_alt_edad_ratio <- quantile(avg_train_set_snack_2$avg_alt_edad_ratio)
+quantiles_avg_alt_edad_ratio
 ```
 
-Se puede apreciar que es una distribución asimétrica sesgada a derecha, ya que los mayores valores
-se encueran arriba del segundo cuantil (Mediana).
 
-A continuación se re-definen las categorías originales por 3 nueva categorías: Bajo, Medio, Alto.
-Esta categorías estan asociadas al peso de de individuo. Si el indivídio tiene un peso menor al Q1,
-se le asigna el nivel Bajo, si esta entre Q1 y Q3 sera Medio y Alta arroba de Q3. Finalmente a
-continuación se transforma la variable en el conjunto de entrenamiento y en test se usas los los
-cuantíles generados con en conjunto de entrenamiento:
+```{r}
+q2 <- quantiles_avg_alt_edad_ratio[3]
+
+snack_level_mapping <- avg_train_set_snack_2 %>% 
+  mutate(level = case_when(
+    avg_alt_edad_ratio < q2  ~ 'Bajo',
+    avg_alt_edad_ratio >=  q2 ~ 'Alto'
+  )) %>% select(consumo_semanal_snacks, level)
+
+snack_level_mapping %>%
+  arrange(consumo_semanal_snacks)
+```
+
 
 ```{r fig.height=4, fig.width=5, warning=FALSE, fig.align='center'}
-q1 <- quantile(peso_medio_by_nivel_consumo_snack)[2]
-q3 <- quantile(peso_medio_by_nivel_consumo_snack)[4]
+train_set_snack_2 <- train_set %>%
+  inner_join(snack_level_mapping, by = 'consumo_semanal_snacks') %>%
+  mutate(consumo_semanal_snacks = level) %>% 
+  select(-level)
 
-train_set2 <- train_set %>%
-  mutate(consumo_semanal_snacks = case_when(peso <  q1 ~ "Bajo", peso >= q3 ~ "Alto", TRUE ~ "Medio"))
-
-test_set2 <- test_set %>%
-  mutate(consumo_semanal_snacks = case_when(peso <  q1 ~ "Bajo", peso >= q3 ~ "Alto", TRUE ~ "Medio")) %>% 
-  mutate(consumo_semanal_snacks = as.factor(consumo_semanal_snacks))
-
-test_set2 %>% segmented_box_plot(
-  column        = 'peso', 
-  segmented_by  = 'consumo_semanal_snacks',
-  title         = 'Consumo de snacks ordenado por la mediana del peso en Test',
-  y_label       = 'Peso (Kg)',
-  y_limits      = c(40, 100),
-  x_label       = 'Consumo de snacks (Veces/Semana)'
-)
+test_set_snack_2 <- test_set %>%
+  inner_join(snack_level_mapping, by = 'consumo_semanal_snacks') %>%
+  mutate(consumo_semanal_snacks = level) %>% 
+  select(-level)
 ```
 
-Se puede apreciar que en el conjunto de test no hay valores medio, pero existe en el conjunto de
-entrenamiento.
+```{r warning=FALSE}
+train_set_snack_2 %>%  
+  group_by(consumo_semanal_snacks) %>% 
+  tally()
+
+test_set_snack_2 %>%  
+  group_by(consumo_semanal_snacks) %>% 
+  tally()
+```
+
+
+
+```{r}
+model_snacks_2 <- lm(
+  peso ~ altura + edad + genero + consumo_semanal_snacks +  genero * edad, 
+  data = train_set_snack_2
+)
+
+coefficients_summary(model_snacks_2)
+anova_summary(model_snacks_2)
+glance(model_snacks_2)
+```
+
+
 
 **Modelo 3**
 
