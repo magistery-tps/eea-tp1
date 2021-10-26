@@ -40,7 +40,6 @@ options(warn=-1)
 rm(list=ls())
 gc()
 options(warn=-2)
-clean <- function() { cat("\014") }
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -70,7 +69,6 @@ Se fija la semilla y se validan las proporciones de los conjuntos de entrenamien
 
 ```{r}
 set.seed(25)
-
 show_train_test_props(train_set, test_set)
 ```
 

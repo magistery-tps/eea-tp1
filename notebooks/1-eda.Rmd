@@ -100,8 +100,8 @@ A continuación abreviamos los valores de la variables categóricas y los llevam
 
 
 ```{r warning=FALSE}
-train_set <- shorten_values(train_set)
-show_values(train_set)
+train_set2 <- shorten_values(train_set)
+show_values(train_set2 %>% select(-altura, -peso))
 ```
 
 
@@ -111,20 +111,20 @@ Por otro lado, se encontraron valores faltantes. Estos no estaban expresados por
 A continiacion se visualiza el numero y porcentaje de faltantes por variable:
 
 ```{r warning=FALSE}
-missings_summary(train_set)
+missings_summary(train_set2)
 ```
 
 Se aprecia que 7 variables tienen faltantes. Por otro lado, la variable con mayor número de faltantes llega al 1.4% del total(nivel educativo). Dado que tenemos tan poco valores faltantes se decidio eliminarlos. A continiacion se eliminan
 las observaciones con valores faltantes y se vuelve a realizar el reporte para constatar:
 
 ```{r}
-raw_train_set_count <- nrow(train_set)
-train_set <- drop_missings(train_set)
-missings_summary(train_set)
+raw_train_set_count <- nrow(train_set2)
+train_set3 <- drop_missings(train_set2)
+missings_summary(train_set3)
 ```
 
 ```{r}
-print(paste('Total faltantes: ', (1 - (nrow(na.omit(train_set)) / raw_train_set_count)) * 100, "%"))
+print(paste('Total faltantes: ', (1 - (nrow(na.omit(train_set3)) / raw_train_set_count)) * 100, "%"))
 ```
 
 Contactamos que se filtraron todas las observaciones con valores faltantes y ademas que era un total de 3.8%.
@@ -132,7 +132,7 @@ Contactamos que se filtraron todas las observaciones con valores faltantes y ade
 A continuación vamos a analizar cada variable por separados comenzando por la variables numéricas:
 
 ```{r fig.height=2, fig.width=3, message=TRUE, warning=FALSE}
-hist_plots(train_set, bins = c(7.5, 20, 20, 8.5, 7.5, 8.5))
+hist_plots(train_set3, bins = c(7.5, 20, 20, 8.5, 7.5, 8.5))
 ```
 
 **Observaciones**
@@ -149,8 +149,9 @@ hist_plots(train_set, bins = c(7.5, 20, 20, 8.5, 7.5, 8.5))
 
 A continuación se visualizan los niveles de consumo según la edad del individuo.
 
-```{r}
-train_set2 <- train_set %>%
+`
+```{r fig.height=2.1, fig.width=3.1, warning=FALSE}
+train_set3 %>%
   mutate(
     edad     = as.factor(edad),
     peso     = as.factor(cut(peso, breaks=c(20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150), right = FALSE)),
@@ -160,16 +161,10 @@ train_set2 <- train_set %>%
     gaseosas = as.integer(consumo_semanal_gaseosas),
     snacks   = as.integer(consumo_semanal_snacks),
     verduras = as.integer(consumo_semanal_verdura)
+  ) %>% segmented_bar_plots(
+    columns      = c('alcohol', 'grasas', 'frutas', 'gaseosas', 'snacks', 'verduras'),
+    segmented_by = 'edad'  
   )
-```
-
-
-```{r fig.height=2.1, fig.width=3.1, warning=FALSE}
-segmented_bar_plots(
-  train_set2, 
-  columns      = c('alcohol', 'grasas', 'frutas', 'gaseosas', 'snacks', 'verduras'),
-  segmented_by = 'edad'  
-)
 ```
 
 **Observaciones**
@@ -182,7 +177,7 @@ Luego, si comparamos las distribuciones por medio de un box-plot comparativo:
 
 ```{r fig.align='center', fig.height=6, fig.width=8, warning=FALSE}
 box_plots(
-  train_set,
+  train_set3,
   title = 'Comparativas de distribuciones para las variables numéricas'
 )
 ```
@@ -201,7 +196,7 @@ Se puede observar que:
 A continuación se realizan barplots para las variables categóricas:
 
 ```{r fig.height=2.1, fig.width=3.1, warning=FALSE}
-bar_plots(train_set)
+bar_plots(train_set3)
 ```
 
 Luego podemos observar que:
@@ -227,7 +222,7 @@ Luego podemos observar que:
 A continuación analizamos las correlaciones entre las variables numéricas:
 
 ```{r fig.align='center', fig.height=5, fig.width=5, warning=FALSE}
-corr_plot(train_set, title='Correlación de variables numéricas')
+corr_plot(train_set3, title='Correlación de variables numéricas')
 ```
 
 **Observaciones**
@@ -237,7 +232,7 @@ A primera vista se puede observar que la altura es un facto importante para dete
 A continúan vamos a analizar la relación entre variables realizando una apertura por genero. Para realizar este paso vamos seleccionar las variables que mejor discriminan el peso, entendiendo que son las mas importantes para nuestro análisis ya que el gráfico ggpairs no es legible con muchas variables.
 
 ```{r fig.align='center', fig.height=5, fig.width=8, message=FALSE, warning=FALSE}
-fi_result <- features_importance(train_set, target_column)
+fi_result <- features_importance(train_set3, target_column)
 plot_features_importance(fi_result)
 ```
 
@@ -251,7 +246,7 @@ most_important_variables
 Era de esperable que la altura influya en el peso como vimos anteriormente. Luego la edad también ya que los menores (en general) tiene menor mero que los mayores (18 años). Otro factor el grado de consumo de frutas y verduras. Para comprender por que el peso esta determinado por el genero gemos el siguiente grafico:
 
 ```{r, fig.height=2.5, fig.width=5, fig.align='center'}
-ggplot(train_set, aes(x=genero, y=peso, fill=genero)) + geom_boxplot()
+ggplot(train_set3, aes(x=genero, y=peso, fill=genero)) + geom_boxplot()
 ```
 
 Se aprecia que la media del pedo masculino es mayor al femenino, tal vez por una diferencia en su musculatura.
@@ -259,7 +254,7 @@ Se aprecia que la media del pedo masculino es mayor al femenino, tal vez por una
 Luego a continuación veamos la relación entre las variables mas importantes.
 
 ```{r fig.align='center', fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
-train_set %>% 
+train_set3 %>% 
   select(c(most_important_variables, peso)) %>%
   pairs_plot('genero') +
   labs(title = 'Correlación de variables mas importantes segmentadas por género') 
@@ -267,14 +262,14 @@ train_set %>%
 
 **Observaciones**
 
--   Se aprecia que los Masculinos tiene una relación mas fuerte entre su altura y el consumo de frutas/verduras que los femeninos. En comprensible que al ser mas altos en promedio requieran mayor alimento. Por otro lado, la relación se puede apreciar el consumo de frutas y verduras es muy parece en ambos sexos, esto evidencia que la relación anterior no es muy significativa.
+-   Se aprecia que los masculinos tiene una relación mas fuerte entre su altura y el consumo de frutas/verduras que los femeninos. En comprensible que al ser mas altos en promedio requieran mayor alimento. Por otro lado, la relación se puede apreciar el consumo de frutas y verduras es muy parece en ambos sexos, esto evidencia que la relación anterior no es muy significativa.
 -   La altura parase discriminar bien al peso, ya que ambas distribuciones están muy poco solapadas.
 -   Las edades tienen varias moda una por cada año: 8vo, 9no, 1ro, 2do, y 3ro. las edades están bien balanceadas entre ambos sexos, sus media son prácticamente iguales.
 -   Se vuelve a apreciar la relación peso-altura la cual parece estar separada or genero. menor peso y altura para los Femeninos y lo contrario para los Masculinos.
 
 ```{r, fig.height=4, fig.width=7, fig.align='center'}
 mosaic_plot(
-  train_set, 
+  train_set3, 
   column       = 'frecuencia_hambre_mensual', 
   segmented_by = 'consumo_semanal_verdura',
   title        = 'Frecuencia de hambre vs consumo de verduras'
@@ -283,7 +278,7 @@ mosaic_plot(
 
 ```{r, fig.height=4, fig.width=7, fig.align='center'}
 mosaic_plot(
-  train_set,
+  train_set3,
   column       = 'frecuencia_hambre_mensual', 
   segmented_by = 'consumo_semanal_comida_grasa',
   title        = 'Frecuencia de hambre vs consumo de grasas'
@@ -292,7 +287,7 @@ mosaic_plot(
 
 ```{r, fig.height=4, fig.width=7, fig.align='center'}
 mosaic_plot(
-  train_set,
+  train_set3,
   column       = 'frecuencia_hambre_mensual', 
   segmented_by = 'consumo_semanal_frutas',
   title        = 'Frecuencia de hambre vs consumo de frutas'
@@ -301,7 +296,7 @@ mosaic_plot(
 
 ```{r, fig.height=4, fig.width=7, fig.align='center'}
 mosaic_plot(
-  train_set,
+  train_set3,
   column       = 'frecuencia_hambre_mensual', 
   segmented_by = 'consumo_semanal_snacks',
   title        = 'Frecuencia de hambre vs consumo de snacks'
@@ -310,7 +305,7 @@ mosaic_plot(
 
 ```{r, fig.height=4, fig.width=7, fig.align='center'}
 mosaic_plot(
-  train_set,
+  train_set3,
   column       = 'frecuencia_hambre_mensual', 
   segmented_by = 'consumo_semanal_gaseosas',
   title        = 'Frecuencia de hambre vs consumo de gaseosas'

@@ -105,7 +105,7 @@ segmented_bar_plots <- function(df, columns, segmented_by) {
 mosaic_plot <- function(df, column, segmented_by, title=NULL) {
   ggplot(df) +
   geom_mosaic(aes(x=product(!!sym(column)), fill=!!sym(segmented_by))) +
-  theme(axis.text.x = element_text(angle=90, hjust=.1, vjust=-0.3), legend.position = "bottom") +
+  theme(axis.text.x = element_text(angle=90, hjust=.1, vjust=-0.3), legend.position = "none") +
   labs(title = title)
 }
 

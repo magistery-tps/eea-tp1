@@ -1,5 +1,5 @@
 library(pacman)
-p_load(tidyverse, dplyr)
+p_load(tidyverse, dplyr, compareGroups)
 p_load_gh('adrianmarino/commons')
 
 target_column <- 'peso'
@@ -8,9 +8,7 @@ load_train_set          <- function() load_df_from_csv('../dataset/encuesta_salu
 load_original_train_set <- function() load_df_from_csv('../dataset/encuesta_salud_modelo6.csv')
 load_test_set           <- function() load_df_from_csv('../dataset/encuesta_salud_test.csv')
 
-feat <- function(df) features(df, target_column)
-tar  <- function(df) target(df, target_column)
-
+p_load(tidyverse, tidymodels, compareGroups)
 
 missings_summary <- function(
   df, 
@@ -56,8 +54,7 @@ show_values <- function(df , columns=c()) {
     columns <- df %>% colnames()
   }
   for(column in columns) {
-    p <- df %>% group_by(!!sym(column)) %>% tally()
-    print(p)
+    printTable(df %>% group_by(!!sym(column)) %>% tally())
   }
 }
 

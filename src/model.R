@@ -1,14 +1,5 @@
 library(pacman)
-p_load(tidyverse, tidymodels, DT)
-
-show_table <- function(table, page_size = 6) {
-  print(datatable(
-    table, 
-    rownames = FALSE, 
-
-    options = list(page_size = page_size, scrollX=T)
-  ))
-}
+p_load(tidyverse, tidymodels, compareGroups)
 
 show_train_test_props <- function(train_set, test_set) {
   n_test     <- nrow(test_set)
@@ -74,8 +65,8 @@ coefficients_summary <- function(model) {
   tidy_sumamry <- tidy(model, conf.int = TRUE)
   model_summary <- model_coefficients_summary(tidy_sumamry)
 
-  show_table(tidy_sumamry)
-  show_table(model_summary)
+  printTable(tidy_sumamry))
+  printTable(model_summary)
   plot_tidy_coefficients(tidy_sumamry)
 }
 
