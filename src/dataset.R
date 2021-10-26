@@ -28,9 +28,9 @@ missings_summary <- function(
 
 missings_columns <- function(ds, max_col_missings = 0.5) {
   missings_summary(ds) %>% 
-    filter(`% Faltantes` > (max_col_missings * 100)) %>%
-    select(Variable) %>%
-    pull()
+    dplyr::filter(`% Faltantes` > (max_col_missings * 100)) %>%
+    dplyr::select(Variable) %>%
+    dplyr::pull()
 }
 
 drop_missings <- function(df, special_missings = c('Dato perdido'), max_col_missings = 0.5) {

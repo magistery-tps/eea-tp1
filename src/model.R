@@ -1,5 +1,5 @@
 library(pacman)
-p_load(tidyverse, tidymodels, compareGroups)
+p_load(tidyverse, tidymodels, compareGroups, MASS)
 
 show_train_test_props <- function(train_set, test_set) {
   n_test     <- nrow(test_set)
@@ -13,16 +13,16 @@ show_train_test_props <- function(train_set, test_set) {
 
 model_coefficients_summary <- function(df, p_value_threshold=0.05) {
   if(!("p.value" %in% colnames(df))) {
-    print("WARN: p.value column is required!\n");
-    return()  
+    print("WARN: p.value column is required to make model coefficients summary!\n");
+    return(NULL)
   }
   if(!("conf.low" %in% colnames(df))) {
-    print("WARN: conf.low column is required!\n");
-    return()
+    print("WARN: conf.low column is required to make model coefficients summary!\n");
+    return(NULL)
   }
   if(!("conf.high" %in% colnames(df))) {
-    print("WARN: conf.high column is required!\n");
-    return()
+    print("WARN: conf.high column is required to make model coefficients summary!\n");
+    return(NULL)
   }
 
   df %>% 
@@ -36,16 +36,16 @@ model_coefficients_summary <- function(df, p_value_threshold=0.05) {
 
 plot_tidy_coefficients <- function(df) {
   if(!("p.value" %in% colnames(df))) {
-    print("WARN: p.value column is required!\n");
-    return()  
+    print("WARN: p.value column is required to plot tidy coefficients!\n");
+    return(NULL)  
   }
   if(!("conf.low" %in% colnames(df))) {
-    print("WARN: conf.low column is required!\n");
-    return()
+    print("WARN: conf.low column is required to plot tidy coefficients!\n");
+    return(NULL)
   }
   if(!("conf.high" %in% colnames(df))) {
-    print("WARN: conf.high column is required!\n");
-    return()
+    print("WARN: conf.high column is required to plot tidy coefficients!\n");
+    return(NULL)
   }
   
   ggplot(
@@ -63,10 +63,13 @@ plot_tidy_coefficients <- function(df) {
 
 coefficients_summary <- function(model) {
   tidy_sumamry <- tidy(model, conf.int = TRUE)
+  printTable(tidy_sumamry)
+  
   model_summary <- model_coefficients_summary(tidy_sumamry)
+  if(!is.null(model_summary)) {
+    printTable(as.data.frame(model_summary))
+  }
 
-  printTable(tidy_sumamry))
-  printTable(model_summary)
   plot_tidy_coefficients(tidy_sumamry)
 }
 

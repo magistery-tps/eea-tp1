@@ -54,11 +54,11 @@ import('../src/plot.R')
 
 A continuación se cargan los conjuntos de entrenamiento y test. también se resumen los valores de
 las variables categóricas y se excluyen los registros con missings, ya que son muy pocos en
-comparación de la cantidad total de resgístros.
+comparación de la cantidad total de registros.
 
 ```{r message=FALSE, warning=FALSE}
-train_set <- drop_missings(shorten_values(preprocess(load_train_set())))
-test_set  <- drop_missings(shorten_values(preprocess(load_test_set())))
+train_set <- load_train_set() %>% preprocess() %>% shorten_values() %>% drop_missings()
+test_set  <- load_test_set() %>% preprocess() %>% shorten_values() %>% drop_missings()
 ```
 
 ```{r}
@@ -284,7 +284,7 @@ anteriores, edad y altura son significativas.
 Veamos a continuación las distribuciones de las categorías de la variable **consumo_semanal_snacks**
 ordenadas por la mediana del peso:
 
-```{r fig.height=4, fig.width=4, warning=FALSE, fig.align='center'}
+```{r fig.height=4, fig.width=6, warning=FALSE, fig.align='center'}
 segmented_box_plot(
   train_set, 
   column        = 'peso', 
@@ -330,7 +330,7 @@ se le asigna el nivel Bajo, si esta entre Q1 y Q3 sera Medio y Alta arroba de Q3
 continuación se transforma la variable en el conjunto de entrenamiento y en test se usas los los
 cuantíles generados con en conjunto de entrenamiento:
 
-```{r fig.height=5, fig.width=3, warning=FALSE, fig.align='center'}
+```{r fig.height=4, fig.width=5, warning=FALSE, fig.align='center'}
 q1 <- quantile(peso_medio_by_nivel_consumo_snack)[2]
 q3 <- quantile(peso_medio_by_nivel_consumo_snack)[4]
 
@@ -421,7 +421,7 @@ anova_summary(model_4)
 glance(model_4)
 ```
 
-```{r fig.height=3, fig.width=5, warning=FALSE, fig.align='center'}
+```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
 train_set3 <- column_mean_quantile_binning(train_set2, 'dias_actividad_fisica_semanal')
 test_set3  <- column_mean_quantile_binning(test_set2,  'dias_actividad_fisica_semanal')
 
@@ -450,7 +450,7 @@ segmented_box_plot(
 
 **Modelo 5**
 
-$E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + + \beta_3 * genero + \beta4 * consumoSemanalSnacks + \beta_5 * diasActividadFisicaSemanal + \beta_6 * consumoSemanalFrutas + \beta_7 * consumoSemanalVerduras + \beta_8 * consumoSemanalGrasas + \beta_9 * consumoSemanalGaseosas$
+$E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + + \beta_3 * genero + \beta4 * consumoSemanalSnacks + \\ \beta_5 * diasActividadFisicaSemanal + \beta_6 * consumoSemanalFrutas + \beta_7 * consumoSemanalVerduras + \\* \beta_8 * consumoSemanalGrasas + \beta_9 * consumoSemanalGaseosas$
 
 Se utilizo la redefinición de la variable **consumo_semanal_snacks** como base. Ademase se agregar
 la variable consumo_semenal_frutras/verduras/grasas/gaseaosas entendiendo que también tiene una
@@ -591,7 +591,7 @@ nrow(new_train_set)
 
 Comparemos las distribuciones del peso vs altura en ambos conjunto de entrenamiento:
 
-```{r fig.height=4, fig.width=3, warning=FALSE, fig.align='center'}
+```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
 box_plots(
   train_set %>% select(peso, altura), 
   title = 'Comparativas de distribuciones del peso y la altura'
@@ -645,15 +645,18 @@ Definimos un modelo igual al **modelo 1** entrenando en el dataset de entrenamie
 usamos un modelo lineal robusto.
 
 ```{r}
-p_load(MASS)
-
 model_7 <- rlm(
   peso ~ altura + edad + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
   data = new_train_set
 )
 coefficients_summary(model_7)
+```
+
+```{r}
 anova_summary(model_7)
 ```
+
+
 
 ```{r}
 models <- list('Modelo 6'=model_6, 'Modelo 7'=model_7)
