@@ -12,7 +12,7 @@ mapping_cols = c(
   "edad_consumo_alcohol"
 )
 
-preprocess <- function(df, excluded_variables = c('record')) {
+ preprocess <- function(df, excluded_variables = c('record')) {
   # Excluded colums and transform char columns to factors. 
   df <- df %>% 
     dplyr::select(-all_of(excluded_variables))  %>%

@@ -10,24 +10,28 @@ date: "2021/09/19"
 fig_width: 3 
 fig_height: 3 
 output:
-  html_document: 
+  html_document:
     highlight: pygments
     theme: sandstone
+    toc: yes
+    df_print: paged
     includes:
       before_body: ./header.html
       after_body: ./footer.html
+  html_notebook: 
+    toc: yes
+    toc_float: yes
+    df_print: paged
 ---
 
-```{r, results='hide'}
+```{r message=FALSE, warning=FALSE}
 options(warn=-1)
 rm(list=ls())
 gc()
 options(warn=-2)
-clean <- function() { cat("\014") }
-clean()
 ```
 
-```{r, results='hide'}
+```{r message=FALSE, warning=FALSE}
 # install.packages("pacman")
 library(pacman)
 p_load(tidyverse)
@@ -35,7 +39,6 @@ p_load_gh('adrianmarino/commons')
 import('../src/dataset.R')
 import('../src/preprocessing.R')
 import('../src/plot.R')
-clean()
 ```
 
 ```{r}
@@ -59,156 +62,217 @@ glimpse(train_set)
 
 Se parecían tanto variable numéricas como categóricas:
 
-Numéricas:
+**Numéricas**
 
-  * edad
-  * altura
-  * peso
-  * dias_consumo_comida_rapida: Dias de consumo de comida rapida por semana.
-  * dias_actividad_fisica_semanal
-    * consumo_diario_alcohol: Categórica ordinal. Cuando mas se consume mas contraproducente.
+*   **Edad**: Medida en años.
 
-Categóricas:
+*   **Altura**: Medida en cms.
 
-  * genero: No orginal.
-  * nivel_educativo: De tipo orginal. El orden seria 8, 9, 1, 2, 3 llevándolo a la medida del polimodal.
-  * frecuencia_hambre_mensual: De tipo ordinal, Ej.: Siempre es mas de nunca.
-  * edad_consumo_alcohol: Entiendo que es la edad en la que se comenzo a consumir alcohol. Es claramente ordinal.
+*   **Peso**: Medida en kgs.
 
-  * consumo_semanal_frutas: Categórica ordinal.
-  * consumo_semanal_verdura: Categórica ordinal.
-  * consumo_semanal_gaseosas: Categórica ordinal.
-  * consumo_semanal_snacks: Categórica ordinal.
-  * consumo_semanal_comida_grasa: Categórica ordinal.
+*   **Días consumo comida rápida**: Medida en Días/Semana.
 
-A continuacion abreviamos los valores de la variables categóricas y los llevamos a una unica unidad de media, ya sea veces/semana o veces/día:
+*   Días actividad física semanal: Medida en Días/Semana.
+
+*   **Consumo diario alcohol**: Medida en Tragos/Día.
+
+**Categóricas**
+
+*  **Genero**: No ordinal.
+
+*   **Nivel educativo**: De tipo ordinal. El orden seria 8, 9, 1, 2, 3 llevándolo a la medida polimodal.
+
+*   **Frecuencia hambre mensual**: De tipo ordinal.
+
+*   **Edad consumo alcohol**: Es la edad de inicio de consumo de alcohol. Es claramente ordinal. Medida en años.
+
+*   **Consumo semanal frutas**: Categórica ordinal. Medida en Veces/Semana.
+
+*   **Consumo semanal verdura**: Categórica ordinal. Medida en Veces/Semana.
+
+*   **Consumo_semanal_gaseosas**: Categórica ordinal. Medida en Veces/Semana.
+
+*   **Consumo semanal snacks**: Categórica ordinal. Medida en Veces/Semana.
+
+*   **Consumo semanal comida grasa**: Categórica ordinal. Medida en Veces/Semana.
+
+A continuación abreviamos los valores de la variables categóricas y los llevamos a una única unidad de media, ya sea veces/semana o veces/día:
 
 
-```{r}
+```{r warning=FALSE}
 train_set <- shorten_values(train_set)
 show_values(train_set)
 ```
 
-Por otro lado, se encontraron valores faltantes. Esto no estaban expresados típica-mente por NA o NULL sino que están definidos implícitamente como "Data perdido"). En el paso anterior se transformaron todos a NA's. A continiacuon podemos ver un resumen de faltantes por variables:
 
-```{r}
+Por otro lado, se encontraron valores faltantes. Estos no estaban expresados por valores NA o NULL, sino que están definidos explícitamente como "Data perdido". En el paso anterior se transformaron a NA.
+
+
+A continiacion se visualiza el numero y porcentaje de faltantes por variable:
+
+```{r warning=FALSE}
 missings_summary(train_set)
 ```
-Se aprecia que solo 7 variables tiene faltantes y el valor máximo en un 1.4% del total para nivel educativo. En este análisis no vamos a optar por completar valores y optiamos por eliminarlos ya que es un porcentaje muy bajo.
+
+Se aprecia que 7 variables tienen faltantes. Por otro lado, la variable con mayor número de faltantes llega al 1.4% del total(nivel educativo). Dado que tenemos tan poco valores faltantes se decidio eliminarlos. A continiacion se eliminan
+las observaciones con valores faltantes y se vuelve a realizar el reporte para constatar:
 
 ```{r}
-nrow(train_set)
+raw_train_set_count <- nrow(train_set)
 train_set <- drop_missings(train_set)
-nrow(train_set)
 missings_summary(train_set)
 ```
 
+```{r}
+print(paste('Total faltantes: ', (1 - (nrow(na.omit(train_set)) / raw_train_set_count)) * 100, "%"))
+```
+
+Contactamos que se filtraron todas las observaciones con valores faltantes y ademas que era un total de 3.8%.
 
 A continuación vamos a analizar cada variable por separados comenzando por la variables numéricas:
 
-```{r}
-hist_plots(train_set)
+```{r fig.height=2, fig.width=3, message=TRUE, warning=FALSE}
+hist_plots(train_set, bins = c(7.5, 20, 20, 8.5, 7.5, 8.5))
 ```
 
-Observaciones:
+**Observaciones**
 
-  * La encuesta se realizo en una población de chicos entre 12 y 18 años.
-  * La distribución de la edad  y la altura son muy cercanas a la normal.
-  * La distribución del peso esta sesgada a derecha, ya que la medio del peso se encuentra en los 50 kg entendiendo se que hay una cierta relación con la edad, donde el peso es menor que en una población adulta.
-  * El consumo de comida rápida diario parece ser muy saludable en general que la distribución esta sesgada nuevamente a derecha, indicando que lo mas común es un consuma bajo de comida rápida.
-  * En general la mayoría no consume alcohol pero hay un un numero importante que consume 5 veces al día, comprendiendo que son los mayores.
-  * Hay un alto porcentaje de individuos que realizar actividad física 2 o 7 días a la semana. siendo un poco mas alto que el porcentaje que no hace ninguna actividad.
-En general.
+*   La encuesta se realizo en una población de chicos entre 12 y 18 años. La edad media es de 15 años. La mayoria de las observaciones se encuentran entre los 13 y 17 años.
+*   Las distribuciones de la edad y la altura son muy cercanas a la normal.
+*   La distribución del peso esta sesgada a derecha, ya que la media del peso se encuentra en los 55 kgs, entendiendo que hay una cierta relación con la edad, donde el peso es menor que en una población adulta.
+*   El consumo de comida rápida diario general parece ser muy saludable. La distribución esta sesgada nuevamente a derecha, indicando que lo mas común es un consuma bajo de comida rápida.
+*   En general la mayoría no consume alcohol, pero hay un número importante que consume 5 tragos al día.
+*   Hay un alto porcentaje de individuos que realizar actividad física 2 o 7 días a la semana. siendo un poco mas alto que el porcentaje que no hace ninguna actividad. En general.
+
+
+**Edad vs consumos**
+
+A continuación se visualizan los niveles de consumo según la edad del individuo.
+
+```{r}
+train_set2 <- train_set %>%
+  mutate(
+    edad     = as.factor(edad),
+    peso     = as.factor(cut(peso, breaks=c(20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150), right = FALSE)),
+    alcohol  = as.integer(consumo_diario_alcohol),
+    grasas   = as.integer(consumo_semanal_comida_grasa),
+    frutas   = as.integer(consumo_semanal_frutas),
+    gaseosas = as.integer(consumo_semanal_gaseosas),
+    snacks   = as.integer(consumo_semanal_snacks),
+    verduras = as.integer(consumo_semanal_verdura)
+  )
+```
+
+
+```{r fig.height=2.1, fig.width=3.1, warning=FALSE}
+segmented_bar_plots(
+  train_set2, 
+  columns      = c('alcohol', 'grasas', 'frutas', 'gaseosas', 'snacks', 'verduras'),
+  segmented_by = 'edad'  
+)
+```
+
+**Observaciones**
+
+* Resulta alarmante que el mayor consumo de alcohol se encuentre entre los 13 y 17 años. Inicialmente los más coherente seria
+que comience en edades mas adultas pero no es este el caso.
+* Los mayores consumidores de grasa se encuentran entre los 13 y 17 años, con media en individuos de 15 años de edad. Lo mismo sucede con el consumo de frutas, verduras, gaseosas y snacks. Esto pues estar decida a que no existe una gran correlación de estas variables con la edad.
 
 Luego, si comparamos las distribuciones por medio de un box-plot comparativo:
 
-```{r}
+```{r fig.align='center', fig.height=6, fig.width=8, warning=FALSE}
 box_plots(
-  train_set, 
+  train_set,
   title = 'Comparativas de distribuciones para las variables numéricas'
 )
 ```
 
 Se puede observar que:
-* Tenemos algunos valores atípicos:
-  * Alturas debajo de 136 cms.
-  * Pesos por arriba de los 91kg.
-  * Consumo de comida rápida por superiores a las 2 veces semanales.
-* Las distribuciones peso, altura y edad son claramente separables ya que no se solapan. Esto no sucede con consumo de alcohol,  nª de días de actividad-física/consume-comida-rapida, para las las cuales sus medianas son mas cercanas.
+
+*   Tenemos algunos valores atípicos:
+
+    *   Alturas debajo de 136 cms.
+    *   Pesos por arriba de los 91kg.
+    *   Consumo de comida rápida por superiores a las 2 veces semanales.
+
+*   Las distribuciones peso, altura y edad son claramente separables ya que no se solapan. Esto no sucede con consumo de alcohol, nª de días de actividad-física/consume-comida-rapida, para las las cuales sus medianas son mas cercanas.
 
 
 A continuación se realizan barplots para las variables categóricas:
 
-```{r}
+```{r fig.height=2.1, fig.width=3.1, warning=FALSE}
 bar_plots(train_set)
 ```
 
 Luego podemos observar que:
 
-  * El dataset tiene un sesgo de genero del 15%. Siendo números tan elevados entiendo que podríamos asumir que es un sesgo bajo.
-  * 2 año del polimorfo es máximo y 8vo mínimo.
-  * Excluyendo a los individuos que nunca tiene hambre las categorías mas importantes son Rara vez y Algunas veces, lo cual entiendo son valores normales.
-  * Lo mas frecuente es comenzar a consumir alcohol entre las 12-13  años seguido de 14-15 años. por otro lado en menor porcentaje(-32%) hay una gran cantidad de individuos que no han comenzaron a consumir alcohol. Finalmente en menor medida existen individuos que consumen alcohol antes de los 7 años de edad.
-  * La mayor porcentaje de individuos consumen hasta 3 frutas por semana, seguido de aquellos que no consumen.
-  * A diferencia de las frutas el consumo de verduras es mayor. Quienes no consumen verduras bajan al a mitad vs frutas. La mayoría consume hasta 3 veces x semana seguido de 4 a 7.
-  * La mayoría consume hasta 3 veces pro semana gaseosa y se aprecia un porcentaje importante para aquellos que no consumen. Luego existe un grupo que consume de 4 a 7 días a la semana.
-  * La mayoría consume snasks es hasta 3 veces a la semana o no se consume directamente.
+*   El dataset tiene un sesgo de genero del 15%. Siendo números tan elevados entiendo que podríamos asumir que es un sesgo bajo.
 
-* Es interesante destacar que los consumos de grasas, snack, gaseosas y frutas, parecen tener 3 grupos similares: en mayor medida los que consumen poco, seguida de lo que no consumen y luego los que consumen una cantidad de mediana a alta.
+*   2 año del polimorfo es máximo y 8vo mínimo.
 
+*   Excluyendo a los individuos que nunca tiene hambre las categorías mas importantes son Rara vez y Algunas veces, lo cual entiendo son valores normales.
+
+*   Lo mas frecuente es comenzar a consumir alcohol entre las 12-13 años seguido de 14-15 años. por otro lado en menor porcentaje(-32%) hay una gran cantidad de individuos que no han comenzaron a consumir alcohol. Finalmente en menor medida existen individuos que consumen alcohol antes de los 7 años de edad.
+
+*   La mayor porcentaje de individuos consumen hasta 3 frutas por semana, seguido de aquellos que no consumen.
+
+*   A diferencia de las frutas el consumo de verduras es mayor. Quienes no consumen verduras bajan al a mitad vs frutas. La mayoría consume hasta 3 veces x semana seguido de 4 a 7.
+
+*   La mayoría consume hasta 3 veces pro semana gaseosa y se aprecia un porcentaje importante para aquellos que no consumen. Luego existe un grupo que consume de 4 a 7 días a la semana.
+
+*   La mayoría consume snasks es hasta 3 veces a la semana o no se consume directamente.
+
+*   Es interesante destacar que los consumos de grasas, snack, gaseosas y frutas, parecen tener 3 grupos similares: en mayor medida los que consumen poco, seguida de lo que no consumen y luego los que consumen una cantidad de mediana a alta.
 
 A continuación analizamos las correlaciones entre las variables numéricas:
 
-```{r}
+```{r fig.align='center', fig.height=5, fig.width=5, warning=FALSE}
 corr_plot(train_set, title='Correlación de variables numéricas')
 ```
 
-Observaciones:
+**Observaciones**
 
-A primera vista se puede observar que la altura es un facto importante para determinar el peso. Por otro lado se aprecia una relación menor entre el peso y la edad, lo cual es entendible en individuos en crecimiento. Esto ultimo también sucede con la altura y la edad, pero en menor medida. Por ultimo también se aprecia una relación considerable entre la edad y el consumo de alcohol, entendiendo que a mayor edad el consumo de alcohol es mayor(Correlación positiva).
-Final existe una relación muy baja entre el peso y el consumo de alcohol o comida rápida. Esto puede deberse a que en general la mayoría realiza actividad física toda la semana lo cual puede influir a que estas relaciones sean débiles. 
+A primera vista se puede observar que la altura es un facto importante para determinar el peso. Por otro lado se aprecia una relación menor entre el peso y la edad, lo cual es entendible en individuos en crecimiento. Esto ultimo también sucede con la altura y la edad, pero en menor medida. Por ultimo también se aprecia una relación considerable entre la edad y el consumo de alcohol, entendiendo que a mayor edad el consumo de alcohol es mayor(Correlación positiva). Final existe una relación muy baja entre el peso y el consumo de alcohol o comida rápida. Esto puede deberse a que en general la mayoría realiza actividad física toda la semana lo cual puede influir a que estas relaciones sean débiles.
 
+A continúan vamos a analizar la relación entre variables realizando una apertura por genero. Para realizar este paso vamos seleccionar las variables que mejor discriminan el peso, entendiendo que son las mas importantes para nuestro análisis ya que el gráfico ggpairs no es legible con muchas variables.
 
-A continúan vamos a analizar la relación entre variables realizando una apertura por genero.
-Para realizar este paso vamos seleccionar las variables que mejor discriminan el peso, entendiendo que son las mas importantes para nuestro análisis ya que el gráfico ggpairs no es legible con muchas variables.
-
-```{r}
+```{r fig.align='center', fig.height=5, fig.width=8, message=FALSE, warning=FALSE}
 fi_result <- features_importance(train_set, target_column)
 plot_features_importance(fi_result)
 ```
 
-
 Para ser mas equitativos tomamos las 3 variables mas importantes para ambas métricas:
 
-```{r}
+```{r warning=FALSE}
 most_important_variables <- important_variables_set(fi_result, top=3)
 most_important_variables
 ```
+
 Era de esperable que la altura influya en el peso como vimos anteriormente. Luego la edad también ya que los menores (en general) tiene menor mero que los mayores (18 años). Otro factor el grado de consumo de frutas y verduras. Para comprender por que el peso esta determinado por el genero gemos el siguiente grafico:
 
-
-```{r}
+```{r, fig.height=2.5, fig.width=5, fig.align='center'}
 ggplot(train_set, aes(x=genero, y=peso, fill=genero)) + geom_boxplot()
 ```
+
 Se aprecia que la media del pedo masculino es mayor al femenino, tal vez por una diferencia en su musculatura.
 
 Luego a continuación veamos la relación entre las variables mas importantes.
 
-```{r, out.width="150%"}
+```{r fig.align='center', fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
 train_set %>% 
   select(c(most_important_variables, peso)) %>%
   pairs_plot('genero') +
-  labs(title = 'Correlación de variables mas importantes segmentadas por género')
+  labs(title = 'Correlación de variables mas importantes segmentadas por género') 
 ```
 
-Observaciones:
+**Observaciones**
 
-  * Se aprecia que los Masculinos tiene una relación mas fuerte entre su altura y el consumo de frutas/verduras que los femeninos. En comprensible que al ser mas altos en promedio requieran mayor alimento. Por otro lado, la relación se puede apreciar el consumo de frutas y verduras es muy parece en ambos sexos, esto evidencia que la relación anterior no es muy significativa.
-  * La altura parase discriminar bien al peso, ya que ambas distribuciones están muy poco solapadas.
-  * Las edades tienen varias moda una por cada  año: 8vo, 9no, 1ro, 2do, y 3ro. las edades están bien balanceadas entre ambos sexos, sus media son prácticamente iguales.
-  * Se vuelve a apreciar la relación peso-altura la cual parece estar separada or genero. menor peso y altura para los Femeninos y lo contrario para los Masculinos.
+-   Se aprecia que los Masculinos tiene una relación mas fuerte entre su altura y el consumo de frutas/verduras que los femeninos. En comprensible que al ser mas altos en promedio requieran mayor alimento. Por otro lado, la relación se puede apreciar el consumo de frutas y verduras es muy parece en ambos sexos, esto evidencia que la relación anterior no es muy significativa.
+-   La altura parase discriminar bien al peso, ya que ambas distribuciones están muy poco solapadas.
+-   Las edades tienen varias moda una por cada año: 8vo, 9no, 1ro, 2do, y 3ro. las edades están bien balanceadas entre ambos sexos, sus media son prácticamente iguales.
+-   Se vuelve a apreciar la relación peso-altura la cual parece estar separada or genero. menor peso y altura para los Femeninos y lo contrario para los Masculinos.
 
-```{r}
+```{r, fig.height=4, fig.width=7, fig.align='center'}
 mosaic_plot(
   train_set, 
   column       = 'frecuencia_hambre_mensual', 
@@ -217,7 +281,7 @@ mosaic_plot(
 )
 ```
 
-```{r}
+```{r, fig.height=4, fig.width=7, fig.align='center'}
 mosaic_plot(
   train_set,
   column       = 'frecuencia_hambre_mensual', 
@@ -226,7 +290,7 @@ mosaic_plot(
 )
 ```
 
-```{r}
+```{r, fig.height=4, fig.width=7, fig.align='center'}
 mosaic_plot(
   train_set,
   column       = 'frecuencia_hambre_mensual', 
@@ -235,7 +299,7 @@ mosaic_plot(
 )
 ```
 
-```{r}
+```{r, fig.height=4, fig.width=7, fig.align='center'}
 mosaic_plot(
   train_set,
   column       = 'frecuencia_hambre_mensual', 
@@ -244,7 +308,7 @@ mosaic_plot(
 )
 ```
 
-```{r}
+```{r, fig.height=4, fig.width=7, fig.align='center'}
 mosaic_plot(
   train_set,
   column       = 'frecuencia_hambre_mensual', 
@@ -253,11 +317,8 @@ mosaic_plot(
 )
 ```
 
-Observaciones:
+**Observaciones**
 
-  * La categoría **Nunca tiene hambre** esta dominada por los que consumen grasas entre 0 y 3 veces por semana. Luego los que consumen mas de 3 veces por semana son muy pocos, lo que indica que a mayor consuma de grasas mas hambre produce.
-  * La categoría **Casi simple tiene hambre** tiene una menor cantidad de individuos que consumen grasas entre 0 y 3 veces por día. Esto indica que al consumir mas grasas tiene mas hambre.
-  * La categoría **Casi simple tiene hambre** para el consumo de verduras/frutas se aprecia que esta dominada por los que consumen entre o 3 veces a la semana. Esto nos dice que los que consumen pocas verduras/frutas tiene mas hambre ya que consumes mas grasas.
-
-
-
+-   La categoría **Nunca tiene hambre** esta dominada por los que consumen grasas entre 0 y 3 veces por semana. Luego los que consumen mas de 3 veces por semana son muy pocos, lo que indica que a mayor consuma de grasas mas hambre produce.
+-   La categoría **Casi simple tiene hambre** tiene una menor cantidad de individuos que consumen grasas entre 0 y 3 veces por día. Esto indica que al consumir mas grasas tiene mas hambre.
+-   La categoría **Casi simple tiene hambre** para el consumo de verduras/frutas se aprecia que esta dominada por los que consumen entre o 3 veces a la semana. Esto nos dice que los que consumen pocas verduras/frutas tiene mas hambre ya que consumes mas grasas.

@@ -1,22 +1,34 @@
 library(pacman)
 p_load(tidyverse, GGally, plotly, ggcorrplot, ggmosaic)
 
-hist_plots <- function(df, columns=c()) {
+hist_plots <- function(df, columns=c(), bins = c()) {
   if(is_empty(columns)) {
     columns <- df %>% dplyr::select(is.numeric) %>% colnames()
   }
+  if (is_empty(bins)) {
+    bins <- rep(20, times = length(columns))
+  }
+  
+  bins_index = 1
   for(col in columns) {
+    bins_size <- bins[bins_index]
     p <- ggplot(df, aes(!!sym(col))) + 
-      geom_histogram(col="red", aes(fill=..count..), alpha = .65) +
-      scale_fill_gradient("Frecuencia", low="green", high="red") +
+      geom_histogram(
+        col="red", 
+        aes(fill=..count..), 
+        alpha    = .80, 
+        position = "dodge", 
+        bins     = bins[bins_index]
+      ) +
+      scale_fill_gradient("Frecuencia", low="yellow", high="red") +
+   
       theme(
-        axis.text.x = element_text(vjust = 1, hjust = 1), 
-        legend.position = "bottom",
-        legend.title = element_text(size = 11),
-        legend.text = element_text(size = 11),
-        legend.key.width=unit(1.5,"cm")
-      )
-    plot(p)
+        axis.text.x      = element_text(vjust = 1, hjust = 1), 
+        legend.position  = "none"
+      ) +
+      ylab('Frecuencia')
+    print(p)
+    bins_index <- bins_index + 1
   }
 }
 
@@ -26,7 +38,7 @@ box_plots <- function(df, title=NULL) {
     ggplot(aes(x = Variables, y = Frecuencia, fill = Variables)) +
     scale_y_continuous(limits = c(0, 180)) +
     geom_boxplot(width=0.7) +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1), legend.position = "bottom") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1), legend.position = "none") +
     labs(title = title)
 }
 
@@ -40,13 +52,16 @@ segmented_box_plot <- function(
   y_limits = c(0, 1000)
 ) {
   ggplot(df, aes(x = fct_reorder(!!sym(segmented_by), !!sym(column), .desc = T), y = !!sym(column))) + 
-    geom_boxplot(outlier.shape = NA, alpha = 0.75, aes(fill = !!sym(segmented_by))) + 
+    geom_boxplot(outlier.shape = NA, alpha = 0.75, aes(fill = !!sym(segmented_by)), position = "dodge") + 
     theme_minimal() + 
     theme(legend.position = 'none')+
     labs(y = y_label, x = x_label)  +
     scale_y_continuous(limits = y_limits) +
     ggtitle(title) +
-    theme (axis.text.x = element_text(face="italic", colour="dark grey", size = 10, angle = 0))
+    theme(
+      axis.text.x = element_text(face="italic", colour="dark grey", size = 10, angle = 0),
+      legend.position = "none"
+    )
 }
 
 bar_plots <- function(
@@ -67,23 +82,24 @@ bar_plots <- function(
       aes(x=!!sym(column), y=Frecuencia, fill=!!sym(column))
     ) +
       geom_col(stat="identity", width=width, position = "dodge") +
-      geom_text(aes(label=Frecuencia), vjust=2, color="white", size=count_size)
+      geom_text(aes(label=Frecuencia), vjust=2, color="white", size=count_size) + 
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1), legend.position = "none")
     print(p)
   }
 }
 
-segmented_bar_plot <- function(df, column, segmented_by) {
-  df %>%
-    group_by(!!sym(column), !!sym(segmented_by)) %>% 
-    tally() %>%
-    mutate(Frecuencia =  n / nrow(df)) %>%
-    ggplot(aes(
-      x=reorder(!!sym(column), Frecuencia),
-      y=Frecuencia,
-      fill=!!sym(segmented_by)
-    )) +
-    geom_bar(position="stack", stat="identity") +
-    xlab(column)
+segmented_bar_plots <- function(df, columns, segmented_by) {
+  for(column in columns) {
+    r <- df %>%
+      group_by(!!sym(segmented_by)) %>% 
+      tally(!!sym(column)) %>%
+      ggplot(aes(x=!!sym(segmented_by), y=n, fill = !!sym(segmented_by))) +
+      geom_bar(position="dodge", stat="identity") +
+      xlab(segmented_by) + 
+      ylab(column) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1), legend.position = "none")
+    print(r)
+  }
 }
 
 mosaic_plot <- function(df, column, segmented_by, title=NULL) {
@@ -99,7 +115,8 @@ pairs_plot <- function(df, segment_column) {
       aes(color = !!sym(segment_column)),
       progress = FALSE,
       upper = list(continuous = wrap("cor", size = 3, hjust=0.7)),
-      legend = 3
+      legend = 3,
+      labeller = label_wrap_gen(50)
     ) +
     theme(axis.text.x = element_text(angle=45, vjust=0.5), legend.position = "bottom")
 }
