@@ -63,7 +63,7 @@ plot_tidy_coefficients <- function(df) {
 
 coefficients_summary <- function(model) {
   tidy_sumamry <- tidy(model, conf.int = TRUE)
-  printTable(tidy_sumamry)
+  printTable(as.data.frame(tidy_sumamry))
   
   model_summary <- model_coefficients_summary(tidy_sumamry)
   if(!is.null(model_summary)) {
