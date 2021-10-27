@@ -26,27 +26,26 @@ missings_summary <- function(
     arrange(desc(`% Faltantes`), `Nª Categorias`)
 }
 
-missings_columns <- function(ds, max_col_missings = 0.5) {
+missings_columns <- function(ds, column_max_missings = 0.5) {
   missings_summary(ds) %>% 
-    dplyr::filter(`% Faltantes` > (max_col_missings * 100)) %>%
+    dplyr::filter(`% Faltantes` > (column_max_missings * 100)) %>%
     dplyr::select(Variable) %>%
     dplyr::pull()
 }
 
-drop_missings <- function(df, special_missings = c('Dato perdido'), max_col_missings = 0.5) {
-  mising_column_names <- df %>% missings_columns()
-  column_names        <- setdiff(df %>% colnames(), mising_column_names)
-
-  table <- df
-  for(col in  column_names) {
-    for(missing in special_missings) {
-      table <- table %>% filter(!grepl(missing, !!sym(col)))
-    }
+process_missings <- function(
+  df, 
+  missings_values = c('Dato perdido'), 
+  column_max_missings = 0.5
+) {
+  # Reemplaza los valores considerados missings por NA...
+  for(missings_value in missings_values) {
+    df <- df %>% mutate_all(na_if, missings_value)
   }
 
-  table %>% 
-    select(-mising_column_names) %>% 
-    drop_na()
+  # Borra las columnas que tiene un alto porcentaje de missings (Ej: y).
+  many_misings_columns <- df %>% missings_columns(column_max_missings = column_max_missings)
+  df %>% select(-many_misings_columns)
 }
 
 show_values <- function(df , columns=c()) {

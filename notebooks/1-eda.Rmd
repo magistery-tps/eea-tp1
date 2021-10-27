@@ -42,7 +42,7 @@ import('../src/plot.R')
 ```
 
 ```{r}
-train_set <- preprocess(load_train_set())
+train_set <- load_train_set() %>% preprocess()
 ```
 
 ## 1. Análisis exploratorios
@@ -100,7 +100,7 @@ A continuación abreviamos los valores de la variables categóricas y los llevam
 
 
 ```{r warning=FALSE}
-train_set2 <- shorten_values(train_set)
+train_set2 <- train_set %>% shorten_values()
 show_values(train_set2 %>% select(-altura, -peso))
 ```
 
@@ -119,7 +119,7 @@ las observaciones con valores faltantes y se vuelve a realizar el reporte para c
 
 ```{r}
 raw_train_set_count <- nrow(train_set2)
-train_set3 <- drop_missings(train_set2)
+train_set3 <- train_set2 %>% process_missings() %>% drop_na()
 missings_summary(train_set3)
 ```
 
