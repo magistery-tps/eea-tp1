@@ -29,7 +29,7 @@ editor_options:
 
 ## 2. Modelo inicial
 
-Se plantea la siguiente primera alternativa para modelar el peso:
+### 2.1. Se plantea la siguiente primera alternativa para modelar el peso:
 
 $E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + \beta_3 * genero + \beta4 * diasActividadFisicaSemanal + \beta5 * consumoDiarioAlcohol$
 
@@ -54,7 +54,7 @@ import('../src/plot.R')
 
 A continuación se carga los conjuntos de entrenamiento y test. también se resumen los valores de las
 variables categóricas y se excluyen las observaciones con valores faltantes, ya que son muy pocas
-con redspecto al total.
+con respecto al total.
 
 ```{r message=FALSE, warning=FALSE}
 train_set <- load_train_set() %>% 
@@ -90,7 +90,7 @@ model_1 <- lm(
 )
 ```
 
-**¿Cuál es la interpretación de cada uno de los coeficientes estimados?**
+### 2.2. ¿Cuál es la interpretación de cada uno de los coeficientes estimados?
 
 Veamos a continuación un resumen de los coeficiente del **modelo 1**:
 
@@ -136,7 +136,7 @@ Al analizar cada coeficiente se encuentra que:
     edades de los individuos que mas consumen alcohol (12 q 17 años), ya que estos se encuentran en
     pleno crecimiento.
 
-**¿Son significativos los coeficientes?**
+### 2.3. ¿Son significativos los coeficientes?
 
 Para determina si los coeficientes son aptos para explicar el peso de un individuo se realiza un
 ${T}$ test para cada coeficiente en el cual se evalúan las siguientes hipótesis:
@@ -160,7 +160,7 @@ Luego analizando la salida de **coefficients_summary** concluimos que:
     tanto no existe una diferencia significativa del cero. Finalmente, no hay evidencia
     estadistitamente significativas de que estos coeficientes expliquen al peso.
 
-**¿El modelo resulta significativo para explicar el peso?**
+### 2.4. ¿El modelo resulta significativo para explicar el peso?
 
 Para determinar si es modelo es significativo para explicar el peso de un individuo se realiza un
 $F$ test con las siguientes hipótesis:
@@ -183,12 +183,12 @@ una de las variables regresoras permite explicar el peso. Esto concuerda con los
 $T$ test para las los coeficientes correspondientes a altura, edad y genero femenino(basa) y
 masculino).
 
-**¿Qué porcentaje de la variabilidad explica el modelo?**
+### 2.5. ¿Qué porcentaje de la variabilidad explica el modelo?
 
 Según el valor de $R^2$ ajustado (**adj.r.squared**), este modelo llega a explica el 35% de la
 variabilidad del dataset de entrenamiento, lo cual no es un valor bajo pero tampoco es despreciable.
 
-**¿Que sucede si poner al genero masculino como variable basal?**
+### 2.6. ¿Que sucede si poner al genero masculino como variable basal?
 
 ```{r}
 train_set_genero <- data.frame(train_set) 
@@ -217,17 +217,18 @@ glance(model_genero)
 
 **Observaciones**
 
--   En este caso, cambia el coeficiente $\β_0$ para la categoría basal, manteniéndose los demás
+-   En este caso, cambia el coeficiente $\beta_0$ para la categoría basal, manteniéndose los demás
     coeficientes.
--   Siguen siendo significativos los mismo coeficientes. La unica diferencia es que $\β_0$(basal)
-    representa al genero masculino y $\β_3$ al femenino.
+-   Siguen siendo significativos los mismo coeficientes. La unica diferencia es que $\beta_0$(basal)
+    representa al genero masculino y $\beta_3$ al femenino.
 -   Se mantiene la significatividad global del modelo y el mismo $R^2$.
 -   Como ultimo, cabe aclarar que al cambiar la categoría basar cambian las interpretaciones del
     modelo.
 
 ## 3. Modelo categóricas
 
-Se sugiere probar un modelo que incorpore el consumo semanal de snacks y una interacción entre el
+### 3.1. Se sugiere probar un modelo que incorpore el consumo semanal de snacks y una interacción entre el
+
 género y la edad, en lugar de actividad física y consumo de alcohol. Además se pide explicitamente
 que la categoría "No comí comida salada o snacks en los últimos 7 días" de la variable
 **consumo_semanal_snacks** se encuentre como nivel/categoría basal.
@@ -256,8 +257,9 @@ model_2 <- lm(
 )
 ```
 
-**¿Cuál es la interpretación de los coeficientes estimados para las categorías de
-consumo_semanal_snacks y genero\*edad? ¿Son significativas?**
+### 3.2. ¿Cuál es la interpretación de los coeficientes estimados para las categorías de
+
+consumo_semanal_snacks y genero \* edad? ¿Son significativas?
 
 ```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
 coefficients_summary(model_2)
@@ -265,20 +267,21 @@ coefficients_summary(model_2)
 
 Si interpretamos los coeficientes que son significativos para el $T$ test:
 
-1. Coeficiente correspondiente al **consumo_semanal_snacks\<=3**: 
+1.  Coeficiente correspondiente al **consumo_semanal_snacks\<=3**:
 
-Si fijamos los coeficientes correspondientes a la altura, edad, generoMasculino y generoMasculino\*edad; 
-el peso promedio o esperado de un individuo de consume snacks hasta 3 veces por semana es 1.43 kg menor que
-aquellos que no consumen snacks.
+Si fijamos los coeficientes correspondientes a la altura, edad, generoMasculino y
+generoMasculino\*edad; el peso promedio o esperado de un individuo de consume snacks hasta 3 veces
+por semana es 1.43 kg menor que aquellos que no consumen snacks.
 
-2. Sucede algo similar con las categorias **consumo_semanal_snacks4-6** y **consumo_semanal_snacks>=28** 
-donde:
-  -   El peso para un individio que consume de 4 a 6 veces por semana es 2.25 kg menor que
-      aquellos con no consumen snacks.
-  -   El peso para un individio que consume 28 veces a mas por semana es 2.6 kg menor que aquellos
-      con no consumen snacks.
+2.  Sucede algo similar con las categorias **consumo_semanal_snacks4-6** y
+    **consumo_semanal_snacks>=28** donde:
 
-3. Coeficiente correspondiente al **edad * genero**:
+-   El peso para un individio que consume de 4 a 6 veces por semana es 2.25 kg menor que aquellos
+    con no consumen snacks.
+-   El peso para un individio que consume 28 veces a mas por semana es 2.6 kg menor que aquellos con
+    no consumen snacks.
+
+3.  Coeficiente correspondiente al **edad \* genero**:
 
 Dado el modelo original:
 
@@ -287,33 +290,37 @@ $E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + \beta_3 * genero + \ \b
 y sabiendo que el genero femenino toma el valor 0 y masculino 1. Si reemplazamos estos valores en el
 modelo original encontramos que:
 
-$E_femenimo(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + \beta_4 * consumoSemanalSnacks$
+$E_f(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + \beta_4 * consumoSemanalSnacks$
 
-El genero femenino tiene la ordenada $\beta0$ y las pendientes determinada por $\beta_1$, $\beta_2$ y $\beta_4$.
+El genero femenino tiene la ordenada $\beta0$ y las pendientes determinada por $\beta_1$, $\beta_2$
+y $\beta_4$.
 
-$E_masculino(peso) = (\beta_0 + \beta_3) + \beta_1 \* altura + (\beta_2 + \beta_2,3) \* edad + \ \beta_4 \* consumoSemanalSnacks$
+$E_m(peso) = (\beta_0 + \beta_3) + \beta_1 \* altura + (\beta_2 + \beta_2,3) * edad + \ \beta_4 * consumoSemanalSnacks$
 
-El genero masculino tiene una ordenada que es la suma de la ordenada del genero femenino $\beta_0$ mas $\beta_3$.
-Luego cambia la pendiente $\beta_2$ de la edad, a la cual se le suma $\beta_2,3$
+El genero masculino tiene una ordenada que es la suma de la ordenada del genero femenino $\beta_0$
+mas $\beta_3$. Luego cambia la pendiente $\beta_2$ de la edad, a la cual se le suma $\beta_2,3$
 
-Luego, sabiendo que solo cambian los coeficientes correspondientes al genero y edad, si mantenemos contantes los demás coeficientes obtenemos:
+Luego, sabiendo que solo cambian los coeficientes correspondientes al genero y edad, si mantenemos
+contantes los demás coeficientes obtenemos:
 
-- $E_femenimo(peso) = \beta_0 + \beta_2 * edad + cte$
-- $E_masculino(peso) = (\beta_0 + \beta_3) + (\beta_2 + \beta_2,3) \* edad$
+-   $E_f(peso) = \beta_0 + \beta_2 * edad + cte$
+-   $E_m(peso) = (\beta_0 + \beta_3) + (\beta_2 + \beta_2,3) * edad$
 
 Ahora reemplazamos por los coeficientes por lo valores que encontró el modelo:
 
-- Femenino:
-  - $E_femenimo(peso) = -65.56456109 + 1.22539002 edad + cte$
-- Masculino:
-  1. $E_masculino(peso) = (-65.56456109 + -4.60464631) + (1.22539002 + 0.38927567) * edad + cte$
-  2. $E_masculino(peso) =-70.1692074 + 1.61466569 \* edad + cte$
+-   Femenino:
 
-Finalmente, graficamos ambas rectas definiendo la $cte$ con un valor que de pesos positivos para tener una 
-gráfica consistente:
+    -   $E_f(peso) = -65.56456109 + 1.22539002 edad + cte$
 
+-   Masculino:
 
-```{r fig.height=3, fig.width=3, warning=FALSE, fig.align='center'}
+    1.  $E_m(peso) = (-65.56456109 + -4.60464631) + (1.22539002 + 0.38927567) * edad + cte$
+    2.  $E_m(peso) =-70.1692074 + 1.61466569 * edad + cte$
+
+Finalmente, graficamos ambas rectas definiendo la $cte$ con un valor que de pesos positivos para
+tener una gráfica consistente:
+
+```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
 cte = 100
 
 train_set %>% 
@@ -330,15 +337,18 @@ train_set %>%
   xlab('Edad')
 ```
 
-Finalmente, se puede apreciar que las ordenadas de ambos generos son distintas, donde el genero femenino 
-inicia desde un peso menor al masculino. Luego si variamos únicamente la edad se aprecia que el peso del 
-genero masculino siempre crece mas rápido que el femenino.
+Finalmente, se puede apreciar que las ordenadas de ambos géneros son distintas, donde el genero
+femenino inicia desde un peso menor al masculino. Luego si variamos únicamente la edad, se aprecia
+que el peso del genero masculino es mayor al femenino para la misma edad en todo los casos. Esto se
+debe a que la resta correspondiente al genero masculina esta por arriba de la resta correspondiente
+al genero femenino.
 
-**¿Qué porcentaje de la variabilidad explica el modelo? En caso de detectar que existen categorías
+### 3.3. ¿Qué porcentaje de la variabilidad explica el modelo? En caso de detectar que existen categorías
+
 no significativas de la variable consumo_semanal_snacks evaluar si la variable es significativa en
 su conjunto y, en caso afirmativo, proponer una redefinición de las mismas que permita obtener una
 mayor proporción de categorías significativas individualmente. Luego, analizar si existen cambios en
-la variabilidad explicada por el modelo.**
+la variabilidad explicada por el modelo.
 
 Viendo el resultado de **coefficients_summary** se aprecia que las siguientes categorías de
 **consumo_semanal_snacks** no son significativas:
@@ -413,6 +423,14 @@ glance(model_2_redefinicion_1)
 
 **Modelo 2: Redefinición 2**
 
+En este caso se propone calcular la media del ratio **altura/edad** para cada categoría de la
+variables **consumo_semanal_snacks**. Luego calculamos los cuantiles de esta nueva distribución y
+los utilizamos para crear una nueva categorización: los individuos que tenga un ratio menor al
+cuantil 2 tendran el valor **Bajo** y **Alto** en caso contrario. Se intento llevar a mas niveles
+pero el test $T$ no daba significativo para todos los coeficientes del **modelo 2**.
+
+1.  Definimos la districión altura/edad por categoria de **consumo_semanal_snacks**:
+
 ```{r fig.height=2, fig.width=4, warning=FALSE, fig.align='center'}
 train_set_snack_2 <- train_set %>% 
   mutate(alt_edad_ratio = round(altura/edad, 0))
@@ -426,10 +444,14 @@ ggplot(data = avg_train_set_snack_2, aes(x = avg_alt_edad_ratio)) +
   theme_bw()
 ```
 
+Se los siguientes cuantiles utilizaremos el cuantil 2(50%):
+
 ```{r}
 quantiles_avg_alt_edad_ratio <- quantile(avg_train_set_snack_2$avg_alt_edad_ratio)
 quantiles_avg_alt_edad_ratio
 ```
+
+2.  Creamos un dataset intermedio donde estan mapeadas las categorias originales vs las nuevas:
 
 ```{r}
 q2 <- quantiles_avg_alt_edad_ratio[3]
@@ -443,6 +465,9 @@ snack_level_mapping <- avg_train_set_snack_2 %>%
 snack_level_mapping %>%
   arrange(consumo_semanal_snacks)
 ```
+
+3.  Creamos nuevos dataset de trasin/test con la nueva definición de la variable
+    **consumo_semanal_snacks**:
 
 ```{r fig.height=4, fig.width=5, warning=FALSE, fig.align='center'}
 train_set_snack_2 <- train_set %>%
@@ -465,6 +490,8 @@ test_set_snack_2 %>%
   group_by(consumo_semanal_snacks) %>% 
   tally()
 ```
+
+4.  Evaluamos el nuevo train_set con el **modelo 2**:
 
 ```{r}
 model_2_redefinicion_2 <- lm(
@@ -490,21 +517,13 @@ models %>%
   arrange(desc(adj.r.squared))
 ```
 
-Ambos modelos son significativos para explicar el peso. El modelo **Modelo 2 - Re-definición 1** es
-mas explicativo, ya que $R^2$ ajustado es mayor. Finamente, ambos modelos son meno explicativos que
-el modelo original(**Modelo 2**).
+**Conclusión**: Ambos modelos son significativos para explicar el peso. El modelo **Modelo 2 -
+Re-definición 1** es mas explicativo, ya que $R^2$ ajustado es mayor. Finamente, ambos modelos son
+meno explicativos que el modelo original(**Modelo 2**).
 
 ## 4. Modelos propios y evaluación
 
-Realizar 2 modelos lineales múltiples adicionales y explicar breve-mente la lógica detrás de los
-mismos (se valorará la creación y/o inclusión de variables nuevas).
-
-Evaluar la performance del modelo inicial, el modelo categóricas con las categorías redefinidas de
-la variable **consumo_semanal_snacks** y los modelos desarrollados en este punto en el dataset de
-entrenamiento y evaluación (usar dataset "encuesta_salud_test.csv").
-
-La evaluación de performance consiste en comparar en ambos sets la performance en términos del R
-cuadrado ajustado, RMSE y MAE.
+### 4.1. Realizar 2 modelos lineales múltiples adicionales y explicar breve-mente la lógica detrás de los mismos (se valorará la creación y/o inclusión de variables nuevas). Evaluar la performance del modelo inicial, el modelo categóricas con las categorías redefinidas de la variable consumo_semanal_snacks y los modelos desarrollados en este punto en el dataset de entrenamiento y evaluación (usar dataset "encuesta_salud_test.csv"). La evaluación de performance consiste en comparar en ambos sets la performance en términos del R cuadrado ajustado, RMSE y MAE.
 
 Al continuación se define 2 modelos.
 
@@ -597,7 +616,7 @@ todas las variables categóricas re-definidas) llega a captar la mayor varianza 
 dataset de entrenamiento. Por supuesto esto no dice nada acerca de la performance del modelo en
 test, pero si que tiene la mejor capacidad para extraer información de los dato de entrenamiento.
 
-**¿Cuál es el mejor modelo para nuestro objetivo de predecir el peso? ¿Por qué?**
+### 4.2. ¿Cuál es el mejor modelo para nuestro objetivo de predecir el peso? ¿Por qué?
 
 Ahora comparamos la performance de todo los modelos al evaluar el error delos mismo al predecir el
 peso en el conjunto de train y test tanto para RMSE como MAE:
@@ -642,36 +661,36 @@ Analizar en profundidad el cumplimiento de los supuestos del modelo lineal para 
 plot(model_1)
 ```
 
-**Homosedastisidad**
+**Homocedasticidad**
 
-Al visualizar el primer gráfico (Residuos vs. Valores ajustados) se puede apreciar que no hay
-presencia de homocedastrisisdad, ya que los valores predicho, la variabilidad o amplitud de los
-residuos parece mantenerse con cierta regularidad. Dadas esta condiciones podemos decir que se
+Al visualizar el primer gráfico (Residuos vs. Valores ajustados) se puede apreciar que hay presencia
+de homocedasticidad, ya que a medida que aumentan los valores predichos la variabilidad o amplitud
+de los residuos parece mantenerse en los mismo niveles. Dadas esta condiciones podemos decir que se
 cumple el supuesto de varianza constante.
 
 **Normalidad**
 
-Al visualizar el diagrama **QQ-Plot** podemos observas que en el extremo derecha, el modelo sobre
-estima el peso del los individuos ya que hay una gran diferencia positiva entre el valor predicho y
-el valor esperado teórico. lo mis sucede a izquierca pero en menor medida, donde el modelo subestima
-el valor de peso en comparación al valor esperado teórico. Como dato adiciona este grafito
-corresponde a una distribución sesgada a derecha, también conocido como sesgo positivo. Finalmente
-el QQ-Plot no muestra un grado de alejamiento pronunciado de una districion normal teórica y decimos
-que no se cumple el supuesto de normalidad del modelo.
+Al visualizar el diagrama **QQ-Plot** podemos observas que en el extremo derecho, el modelo
+sobre-estima el peso del los individuos ya que hay una gran diferencia entre los valores predichos y
+los valores esperados teóricos. Lo contrario sucede a izquierda, donde el modelo subestima el valor
+de peso en comparación al valor esperado teórico, aunque los valores de los residuos son menores en
+este caso. Finalmente el QQ-Plot muestra un grado de alejamiento pronunciado de una distribución
+normal teórica y por lo tanto no se cumple el supuesto de normalidad del modelo.
 
 **Apalancamiento (Leverage)**
 
-Si observamos el gráfico de **Residuos vs Apalacamiento** vemos que varias observaciones o
-individuos que se alejan del cumulo de principal. Estos ejercen un apuntalamiento sobre el valores
-predicho del modelo a partir de un apalancamiento(leverage) 0.0020 y es mas pronunciado desde
-0.0025. Finalmente vemos un grado importante de desvió de las predicciones vs su vor esperado.
+Si observamos el gráfico de **Residuos vs Apalacamiento** vemos varias observaciones o individuos
+que se alejan a derecha del cumulo principal. Estos ejercen un alejamiento de las prediciones del
+modelo vs los valores reales a partir de un apalancamiento(leverage) 0.0025 y es mas pronunciado
+desde 0.0035. Finalmente, vemos un grado importante de desvió de las predicciones vs valores reales
+y porn ente un grado importante de apalancamiento(leverage).
 
 A continuación se pueden ver lo individuos que producen mayor apalancamiento(leverage) y por ende
-sesgo en al predicción del modelo:
+sesgo en las predicciones del modelo:
 
 ```{r}
 augment(model_1) %>%
-  filter(.hat>0.00245) %>%
+  filter(.hat>0.0025) %>%
   arrange(.hat)
 ```
 
