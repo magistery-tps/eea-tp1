@@ -5,8 +5,8 @@
 
 * [Consignas](https://github.com/magistery-tps/eea-tp1/blob/master/docs/consignas.pdf)
 * **Notebooks**
-  * [Analisis exploratorio (Punto 1)](https://rpubs.com/adrianmarino/eea-tp1-eda)
-  * [Definicion de modelos (Punto 2 a 6)](https://rpubs.com/adrianmarino/eea-tp1-models)
+  * [Analisis exploratorio (Punto 1)](https://rpubs.com/adrianmarino/eea-tp1-parte1)
+  * [Definicion de modelos (Punto 2 a 6)](https://rpubs.com/adrianmarino/eea-tp1-parte2)
 
 ## Requisitos
 
