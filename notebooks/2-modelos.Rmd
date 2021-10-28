@@ -432,7 +432,7 @@ Como se puede ver, se reagruparan las categorías en 3 grupos:
 - Hasta 7 veces/semana.
 - Mas de 14 veces/semana.
 
-Luego entrenamos el **Modelo 2** usnado esta nueva re-definición:
+Luego entrenamos el **Modelo 2** usando esta nueva re-definición:
 
 ```{r}
 model_2_redefinicion_1 <- lm(
@@ -440,7 +440,7 @@ model_2_redefinicion_1 <- lm(
   data = train_set_snack_1
 )
 
-coefficients_summary(model_2_redefinicion_1)
+coefficients_summary(model_2_redefinicion_1, show_tidy_sumamry = FALSE)
 anova_summary(model_2_redefinicion_1)
 glance(model_2_redefinicion_1)
 ```
@@ -522,7 +522,7 @@ model_2_redefinicion_2 <- lm(
   data = train_set_snack_2
 )
 
-coefficients_summary(model_2_redefinicion_2)
+coefficients_summary(model_2_redefinicion_2, show_tidy_sumamry = FALSE)
 anova_summary(model_2_redefinicion_2)
 glance(model_2_redefinicion_2)
 ```
@@ -578,10 +578,9 @@ model_3 <- lm(
   data = train_set
 )
 
-coefficients_summary(model_3)
+coefficients_summary(model_3, show_tidy_sumamry = FALSE)
 anova_summary(model_3)
 glance(model_3)
-varImp(model_3)
 ```
 
 **Modelo 4**
