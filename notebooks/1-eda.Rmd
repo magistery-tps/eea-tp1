@@ -4,7 +4,7 @@ title: |
     |
     |
     | Materia: Enfoque Estadistico del Aprendizaje
-    | Trabajo práctico 1: Regresion Lineal
+    | Trabajo práctico 1: Regresion Lineal (Parte 1)
 author: "Adrian Norberto Marino"
 date: "2021/09/19"
 fig_width: 3 
@@ -23,6 +23,9 @@ output:
     toc_float: yes
     df_print: paged
 ---
+
+Para iniciar se borran todos los objetos en memoria y cargan las bibliotecas necesarias para realiza 
+el análisis exploratorio:
 
 ```{r message=FALSE, warning=FALSE}
 options(warn=-1)
@@ -47,20 +50,21 @@ train_set <- load_train_set() %>% preprocess()
 
 ## 1. Análisis exploratorios
 
-Leer el archivo "encuesta_salud_train.csv". ¿Qué puede mencionar sobre su estructura y variables? ¿Cómo es la correlación entre las variables numéricas? Utilice y analice en detalle algún gráfico que sirva para sacar conclusiones sobre la asociación de variables realizando apertura por género. En particular, ¿cómo es la correlación entre la variable a explicar (peso) y el resto de las variables numéricas? Para las categorías de la variable frecuencia de hambre mensual, analice gráficamente la distribución en términos de frecuencia relativa de:
+Leer el archivo "encuesta_salud_train.csv". ¿Qué puede mencionar sobre su estructura y variables? 
+¿Cómo es la correlación entre las variables numéricas? Utilice y analice en detalle algún gráfico que sirva para sacar conclusiones sobre la asociación de variables realizando apertura por género. En particular, ¿cómo es la correlación entre la variable a explicar (peso) y el resto de las variables numéricas? Para las categorías de la variable frecuencia de hambre mensual, analice gráficamente la distribución en términos de frecuencia relativa de:
 
-a)  El consumo semanal de verdura.
-b)  El consumo semanal de comida grasa.
+a.  El consumo semanal de verdura.
+b.  El consumo semanal de comida grasa.
 
 ¿Cuáles son las principales características que observa en estos gráficos?
 
-**1.1.** ¿Qué puede mencionar sobre la estructura y variables del dataset?
+### Estructura de las variables
 
 ```{r}
 glimpse(train_set)
 ```
 
-Se parecían tanto variable numéricas como categóricas:
+Tenemos tanto variable numéricas como categóricas:
 
 **Numéricas**
 
@@ -72,7 +76,7 @@ Se parecían tanto variable numéricas como categóricas:
 
 *   **Días consumo comida rápida**: Medida en Días/Semana.
 
-*   Días actividad física semanal: Medida en Días/Semana.
+*   **Días actividad física semanal**: Medida en Días/Semana.
 
 *   **Consumo diario alcohol**: Medida en Tragos/Día.
 
@@ -104,20 +108,18 @@ train_set2 <- train_set %>% shorten_values()
 show_values(train_set2 %>% select(-altura, -peso))
 ```
 
-
 Por otro lado, se encontraron valores faltantes. Estos no estaban expresados por valores NA o NULL, sino que están definidos explícitamente como "Data perdido". En el paso anterior se transformaron a NA.
 
-
-A continiacion se visualiza el numero y porcentaje de faltantes por variable:
+A continuación se visualiza el número y porcentaje de faltantes por variable:
 
 ```{r warning=FALSE}
 missings_summary(train_set2)
 ```
 
-Se aprecia que 7 variables tienen faltantes. Por otro lado, la variable con mayor número de faltantes llega al 1.4% del total(nivel educativo). Dado que tenemos tan poco valores faltantes se decidio eliminarlos. A continiacion se eliminan
-las observaciones con valores faltantes y se vuelve a realizar el reporte para constatar:
+Se aprecia hay 7 variables con valores faltantes. Por otro lado, la variable con mayor número de faltantes llega al 1.4% del total(nivel educativo). Dado que tenemos tan poco valores faltantes se decidió eliminarlos. A continuación se eliminan
+las observaciones con valores faltantes y se vuelve a realizar el reporte para constrastar:
 
-```{r}
+```{r warning=FALSE}
 raw_train_set_count <- nrow(train_set2)
 train_set3 <- train_set2 %>% process_missings() %>% drop_na()
 missings_summary(train_set3)
@@ -127,7 +129,7 @@ missings_summary(train_set3)
 print(paste('Total faltantes: ', (1 - (nrow(na.omit(train_set3)) / raw_train_set_count)) * 100, "%"))
 ```
 
-Contactamos que se filtraron todas las observaciones con valores faltantes y ademas que era un total de 3.8%.
+Finalemnte se filtraron todas las observaciones con valores faltantes (un total  de 3.8%).
 
 A continuación vamos a analizar cada variable por separados comenzando por la variables numéricas:
 
@@ -137,12 +139,13 @@ hist_plots(train_set3, bins = c(7.5, 20, 20, 8.5, 7.5, 8.5))
 
 **Observaciones**
 
-*   La encuesta se realizo en una población de chicos entre 12 y 18 años. La edad media es de 15 años. La mayoria de las observaciones se encuentran entre los 13 y 17 años.
-*   Las distribuciones de la edad y la altura son muy cercanas a la normal.
-*   La distribución del peso esta sesgada a derecha, ya que la media del peso se encuentra en los 55 kgs, entendiendo que hay una cierta relación con la edad, donde el peso es menor que en una población adulta.
-*   El consumo de comida rápida diario general parece ser muy saludable. La distribución esta sesgada nuevamente a derecha, indicando que lo mas común es un consuma bajo de comida rápida.
-*   En general la mayoría no consume alcohol, pero hay un número importante que consume 5 tragos al día.
-*   Hay un alto porcentaje de individuos que realizar actividad física 2 o 7 días a la semana. siendo un poco mas alto que el porcentaje que no hace ninguna actividad. En general.
+* La encuesta se realizo en una población de chicos entre 12 y 18 años. La edad media es de 15 años. La mayoria de las observaciones se encuentran entre los 13 y 17 años.
+* Las distribuciones de la edad y la altura son muy cercanas a la normal.
+* La altura promedio es de 1.65 cm aproximadamente.
+* La distribución del peso esta sesgada a derecha, ya que la media del peso se encuentra en los 55 kgs, entendiendo que hay una cierta relación con la edad, donde el peso es menor que en una población adulta.
+* El consumo de comida rápida diario general parece ser muy saludable. La distribución esta sesgada nuevamente a derecha, indicando que lo mas común es un consuma bajo de comida rápida.
+* En general la mayoría no consume alcohol, pero hay un número importante que consume 5 tragos al día.
+* Hay un alto porcentaje de individuos que realizar actividad física 2 o 7 días a la semana. siendo un poco mas alto que el porcentaje que no hace ninguna actividad.
 
 
 **Edad vs consumos**
@@ -169,9 +172,9 @@ train_set3 %>%
 
 **Observaciones**
 
-* Resulta alarmante que el mayor consumo de alcohol se encuentre entre los 13 y 17 años. Inicialmente los más coherente seria
-que comience en edades mas adultas pero no es este el caso.
-* Los mayores consumidores de grasa se encuentran entre los 13 y 17 años, con media en individuos de 15 años de edad. Lo mismo sucede con el consumo de frutas, verduras, gaseosas y snacks. Esto pues estar decida a que no existe una gran correlación de estas variables con la edad.
+* Resulta alarmante que el mayor consumo de alcohol se encuentre entre los 13 y 17 años. Inicialmente lo más coherente seria
+que comience en edades mayores pero no es este el caso.
+* Los mayores consumidores de grasa se encuentran entre los 13 y 17 años, con media en individuos de 15 años de edad. Lo mismo sucede con el consumo de frutas, verduras, gaseosas y snacks. Esto podráa deberse a que no existe una gran correlación de estas variables con la edad.
 
 Luego, si comparamos las distribuciones por medio de un box-plot comparativo:
 
@@ -184,13 +187,8 @@ box_plots(
 
 Se puede observar que:
 
-*   Tenemos algunos valores atípicos:
-
-    *   Alturas debajo de 136 cms.
-    *   Pesos por arriba de los 91kg.
-    *   Consumo de comida rápida por superiores a las 2 veces semanales.
-
-*   Las distribuciones peso, altura y edad son claramente separables ya que no se solapan. Esto no sucede con consumo de alcohol, nª de días de actividad-física/consume-comida-rapida, para las las cuales sus medianas son mas cercanas.
+*   Tenemos algunos valores atípicos: Alturas debajo de 136 cms, pesos por arriba de los 91kg, consumo de comida rápida por superiores a las 2 veces semanales.
+*   Las distribuciones peso, altura y edad son claramente separables ya que no se solapan. Esto no sucede con consumo de alcohol, nª de días de actividad-física/consume-comida-rapida, para las cuales sus medianas son mas cercanas.
 
 
 A continuación se realizan barplots para las variables categóricas:
@@ -218,6 +216,9 @@ Luego podemos observar que:
 *   La mayoría consume snasks es hasta 3 veces a la semana o no se consume directamente.
 
 *   Es interesante destacar que los consumos de grasas, snack, gaseosas y frutas, parecen tener 3 grupos similares: en mayor medida los que consumen poco, seguida de lo que no consumen y luego los que consumen una cantidad de mediana a alta.
+
+
+### Correlacion de variables numericas
 
 A continuación analizamos las correlaciones entre las variables numéricas:
 
@@ -251,6 +252,8 @@ ggplot(train_set3, aes(x=genero, y=peso, fill=genero)) + geom_boxplot()
 
 Se aprecia que la media del pedo masculino es mayor al femenino, tal vez por una diferencia en su musculatura.
 
+### Apetura por genero
+
 Luego a continuación veamos la relación entre las variables mas importantes.
 
 ```{r fig.align='center', fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
@@ -267,6 +270,8 @@ train_set3 %>%
 -   Las edades tienen varias moda una por cada año: 8vo, 9no, 1ro, 2do, y 3ro. las edades están bien balanceadas entre ambos sexos, sus media son prácticamente iguales.
 -   Se vuelve a apreciar la relación peso-altura la cual parece estar separada or genero. menor peso y altura para los Femeninos y lo contrario para los Masculinos.
 
+### Frecuencia de hambre mensual vs consumo de frutas y verduras
+
 ```{r, fig.height=4, fig.width=7, fig.align='center'}
 mosaic_plot(
   train_set3, 
@@ -280,37 +285,11 @@ mosaic_plot(
 mosaic_plot(
   train_set3,
   column       = 'frecuencia_hambre_mensual', 
-  segmented_by = 'consumo_semanal_comida_grasa',
-  title        = 'Frecuencia de hambre vs consumo de grasas'
-)
-```
-
-```{r, fig.height=4, fig.width=7, fig.align='center'}
-mosaic_plot(
-  train_set3,
-  column       = 'frecuencia_hambre_mensual', 
   segmented_by = 'consumo_semanal_frutas',
   title        = 'Frecuencia de hambre vs consumo de frutas'
 )
 ```
 
-```{r, fig.height=4, fig.width=7, fig.align='center'}
-mosaic_plot(
-  train_set3,
-  column       = 'frecuencia_hambre_mensual', 
-  segmented_by = 'consumo_semanal_snacks',
-  title        = 'Frecuencia de hambre vs consumo de snacks'
-)
-```
-
-```{r, fig.height=4, fig.width=7, fig.align='center'}
-mosaic_plot(
-  train_set3,
-  column       = 'frecuencia_hambre_mensual', 
-  segmented_by = 'consumo_semanal_gaseosas',
-  title        = 'Frecuencia de hambre vs consumo de gaseosas'
-)
-```
 
 **Observaciones**
 
