@@ -1,5 +1,5 @@
 library(pacman)
-p_load(tidyverse, tidymodels, compareGroups, MASS)
+p_load(tidyverse, tidymodels, compareGroups, MASS, caret)
 
 show_train_test_props <- function(train_set, test_set) {
   n_test     <- nrow(test_set)
@@ -80,6 +80,29 @@ anova_summary <- function(model, p_value_threshold=0.05) {
     )
 }
 
+train_test_eval_metric_summary <- function(
+  models, 
+  test_set = NULL, 
+  truth_column='peso', 
+  metric_fn = rmse
+) {
+  train_eval <- eval_metric_summary(
+    models, 
+    truth_column = truth_column, 
+    metric_fn    = metric_fn
+  ) %>% rename(train = .estimate)
+
+  test_eval <- eval_metric_summary(
+    models, 
+    truth_column = truth_column, 
+    metric_fn    = metric_fn,
+    test_set     = test_set
+  ) %>% rename(test = .estimate)
+
+  train_eval %>%
+    inner_join(test_eval, by= 'model') %>%
+    mutate(train_test_diff = abs(train - test))
+}
 
 eval_metric_summary <- function(
   models, 
@@ -151,5 +174,30 @@ models_evaluation_summary <- function(models, test_set, metric_fn = rmse) {
       inner_join(test_sumary, by='model') %>%
       mutate(metric_diff =  abs(train_metric -test_metric)) %>%
       arrange(metric_diff, test_metric)
+}
+
+compare_r2 <- function(model_1, model_2) {
+  r2_model_1 <- glance(model_1)$adj.r.squared
+  r2_model_2 <- glance(model_2)$adj.r.squared
+  diff       <- abs(r2_model_2- r2_model_1) / max(r2_model_1, r2_model_2) * 100 
+  
+  print(paste(
+    'R2 - Modelo A: ', round(r2_model_1, 3), 
+    'Modelo B:', round(r2_model_2, 3), 
+    'Diff: ', round(diff, 3), '%'
+  ))
+}
+
+eval_models_summary <- function(models, test_set,  metric_fn = rmse) {
+  summary <- models %>% 
+  train_test_eval_metric_summary(test_set = test_set, metric_fn = metric_fn)
+
+  min_test_error <- summary %>% 
+    pull(test) %>% 
+    min()
+  
+  summary %>% 
+    arrange(test) %>%
+    mutate(diff_min_test = abs(test - min_test_error))
 }
 

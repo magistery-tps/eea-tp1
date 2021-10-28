@@ -227,11 +227,7 @@ glance(model_genero)
 
 ## 3. Modelo categóricas
 
-### 3.1. Se sugiere probar un modelo que incorpore el consumo semanal de snacks y una interacción entre el
-
-género y la edad, en lugar de actividad física y consumo de alcohol. Además se pide explicitamente
-que la categoría "No comí comida salada o snacks en los últimos 7 días" de la variable
-**consumo_semanal_snacks** se encuentre como nivel/categoría basal.
+### 3.1. Se sugiere probar un modelo que incorpore el consumo semanal de snacks y una interacción entre el género y la edad, en lugar de actividad física y consumo de alcohol. Además se pide explicitamente que la categoría "No comí comida salada o snacks en los últimos 7 días" de la variable **consumo_semanal_snacks** se encuentre como nivel/categoría basal.
 
 $E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + \beta_3 * genero + \beta4 * consumoSemanalSnacks + \beta_5 * genero * edad$
 
@@ -257,9 +253,7 @@ model_2 <- lm(
 )
 ```
 
-### 3.2. ¿Cuál es la interpretación de los coeficientes estimados para las categorías de
-
-consumo_semanal_snacks y genero \* edad? ¿Son significativas?
+### 3.2. ¿Cuál es la interpretación de los coeficientes estimados para las categorías de consumo_semanal_snacks y genero \* edad? ¿Son significativas?
 
 ```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
 coefficients_summary(model_2)
@@ -343,12 +337,7 @@ que el peso del genero masculino es mayor al femenino para la misma edad en todo
 debe a que la resta correspondiente al genero masculina esta por arriba de la resta correspondiente
 al genero femenino.
 
-### 3.3. ¿Qué porcentaje de la variabilidad explica el modelo? En caso de detectar que existen categorías
-
-no significativas de la variable consumo_semanal_snacks evaluar si la variable es significativa en
-su conjunto y, en caso afirmativo, proponer una redefinición de las mismas que permita obtener una
-mayor proporción de categorías significativas individualmente. Luego, analizar si existen cambios en
-la variabilidad explicada por el modelo.
+### 3.3. ¿Qué porcentaje de la variabilidad explica el modelo? En caso de detectar que existen categorías no significativas de la variable consumo_semanal_snacks evaluar si la variable es significativa en su conjunto y, en caso afirmativo, proponer una redefinición de las mismas que permita obtener una mayor proporción de categorías significativas individualmente. Luego, analizar si existen cambios en la variabilidad explicada por el modelo.
 
 Viendo el resultado de **coefficients_summary** se aprecia que las siguientes categorías de
 **consumo_semanal_snacks** no son significativas:
@@ -357,7 +346,7 @@ Viendo el resultado de **coefficients_summary** se aprecia que las siguientes ca
 -   4 a 6 veces durante los últimos 7 (4 a 6 veces semana)
 -   3 veces al día (21 veces/semana)
 
-Pero si son significativas los extremos:
+Pero si son significativos los extremos:
 
 -   De 1 a 3 veces/semana
 -   De 28 o mas veces/semana
@@ -404,10 +393,18 @@ train_set_snack_1 <- train_set %>% mutate(consumo_semanal_snacks = case_when(
 ))
 train_set_snack_1$consumo_semanal_snacks <- factor(
   train_set_snack_1$consumo_semanal_snacks,
-  levels=c('0', '<=7', '>=14'), 
+  levels=c('0', '<=7', '>=14'),
   ordered=FALSE
 )
-table(train_set_snack_1$consumo_semanal_snacks) 
+
+test_set_snack_1 <- test_set %>% mutate(consumo_semanal_snacks = case_when(
+  consumo_semanal_snacks %in% c('<=3', '4-6' , '7')  ~ '<=7',
+  consumo_semanal_snacks %in% c('14', '21', '>=28')  ~ '>=14',
+  TRUE ~ as.character(consumo_semanal_snacks)
+))
+
+table(train_set_snack_1$consumo_semanal_snacks)
+table(test_set_snack_1$consumo_semanal_snacks) 
 ```
 
 ```{r}
@@ -466,7 +463,7 @@ snack_level_mapping %>%
   arrange(consumo_semanal_snacks)
 ```
 
-3.  Creamos nuevos dataset de trasin/test con la nueva definición de la variable
+3.  Creamos nuevos dataset de train/test con la nueva definición de la variable
     **consumo_semanal_snacks**:
 
 ```{r fig.height=4, fig.width=5, warning=FALSE, fig.align='center'}
@@ -523,135 +520,140 @@ meno explicativos que el modelo original(**Modelo 2**).
 
 ## 4. Modelos propios y evaluación
 
-### 4.1. Realizar 2 modelos lineales múltiples adicionales y explicar breve-mente la lógica detrás de los mismos (se valorará la creación y/o inclusión de variables nuevas). Evaluar la performance del modelo inicial, el modelo categóricas con las categorías redefinidas de la variable consumo_semanal_snacks y los modelos desarrollados en este punto en el dataset de entrenamiento y evaluación (usar dataset "encuesta_salud_test.csv"). La evaluación de performance consiste en comparar en ambos sets la performance en términos del R cuadrado ajustado, RMSE y MAE.
+### 4.1. Realizar 2 modelos lineales múltiples adicionales y explicar breve-mente la lógica detrás de los mismos (se valorará la creación y/o inclusión de variables nuevas). 
 
 Al continuación se define 2 modelos.
 
+**Modelo 3**
+
+Para este primer modelo se tiene en cuenta las siguintes variables:
+
+* Altura: Ya que la altura influye en el peso del individio diretamente.
+* Genero: No tiene un relacion directa pero lo individios mascuklino tienen a tener mas altura y por ende mayor peso.
+* consumo_semanal_snacks y consumo_semanal_comida_grasa: Puede considerarse que estas variables afectan en gran media al aumento de peso.
+* altura * edad: Ya que existe una relación importante entre la edad y la altura en el rango de edades del dataset (12 a 18 años). Esta relación se entiende que que a pecta al peso al igual que la altura. 
+*  altura * genero: Parece haber una relación definida entre la altura y el genero, ya que al agregar esta variable
+aumneta ligeramente el $R^2$ Ajustado.
+
+
+```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
+model_3 <- lm(
+  peso~ 
+    altura + 
+    genero + 
+    consumo_semanal_snacks +
+    consumo_semanal_comida_grasa + 
+    altura * edad + 
+    altura * genero,
+  data = train_set
+)
+
+coefficients_summary(model_3)
+anova_summary(model_3)
+glance(model_3)
+varImp(model_3)
+```
+
 **Modelo 4**
 
-$E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + + \beta_3 * genero + \beta4 * consumoSemanalSnacks + \beta_5 * diasActividadFisicaSemanal + \beta_6 * altura * genero$
-
-Se utilizo la redefinición de la variable **consumo_semanal_snacks** como base. Ademase se agregar
-la variable dias_actividad_fisica_semanal entendiendo que tiene una influencia iportante en el peso
-y luego la asociacion altura \* genero ya que en general mas mujeres tienen a ser mas bajar que los
-varones y vise versa.
+En este modelo principalmente se busco sumar explicacbilidad al modelo, es decir e mayor $R^2$ posible si
+prestar atencion si las variables son explicativas o sus categorias en caso de ser categoricas. Para esto
+se agregaron todas las variables del tataset y luego quellas combinacion que sumaron $R^2$ en el *modelo 4*.
 
 ```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
 model_4 <- lm(
-  peso~ 
-    altura + 
-    edad + 
-    genero + 
-    consumo_semanal_snacks +
-    dias_actividad_fisica_semanal +
-    altura*genero,
-  data = train_set_snack_1
+  peso ~
+  edad +
+  genero +
+  nivel_educativo + 
+  altura + 
+  frecuencia_hambre_mensual + 
+  dias_consumo_comida_rapida +
+  edad_consumo_alcohol + 
+  consumo_diario_alcohol + 
+  dias_actividad_fisica_semanal +
+  consumo_semanal_frutas +
+  consumo_semanal_verdura +
+  consumo_semanal_gaseosas +
+  consumo_semanal_snacks +
+  consumo_semanal_comida_grasa +
+  altura * edad + 
+  altura * genero + 
+  altura * nivel_educativo,
+  data = train_set
 )
 
 coefficients_summary(model_4)
 anova_summary(model_4)
 glance(model_4)
+varImp(model_4)
 ```
 
-```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
-train_set3 <- column_mean_quantile_binning(train_set_snack_1, 'dias_actividad_fisica_semanal')
-test_set3  <- column_mean_quantile_binning(train_set_snack_1,  'dias_actividad_fisica_semanal')
+Finalmente, si comparamos los modelos por $R^2$ Ajustado, se puede apreciar que el modelo 5 llega a captar la 
+mayor varianza explicada sobre el conjunto de entrenamiento. Por supuesto esto no dice nada acerca de la 
+performance del modelo en test, pero si que tiene la mejor capacidad para extraer información de los dato 
+de entrenamiento.
 
-train_set3 <- column_mean_quantile_binning(train_set3, 'consumo_semanal_frutas')
-test_set3  <- column_mean_quantile_binning(test_set3,  'consumo_semanal_frutas')
+### 4.2. Evaluar la performance del modelo inicial, el modelo categóricas con las categorías redefinidas de la variable consumo_semanal_snacks y los modelos desarrollados en este punto en el dataset de entrenamiento y evaluación (usar dataset "encuesta_salud_test.csv"). La evaluación de performance consiste en comparar en ambos sets la performance en términos del R cuadrado ajustado, RMSE y MAE ¿Cuál es el mejor modelo para nuestro objetivo de predecir el peso? ¿Por qué?
 
-train_set3 <- column_mean_quantile_binning(train_set3, 'consumo_semanal_verdura')
-test_set3  <- column_mean_quantile_binning(test_set3,  'consumo_semanal_verdura')
-
-train_set3 <- column_mean_quantile_binning(train_set3, 'consumo_semanal_comida_grasa')
-test_set3  <- column_mean_quantile_binning(test_set3,  'consumo_semanal_comida_grasa')
-
-train_set3 <- column_mean_quantile_binning(train_set3, 'consumo_semanal_gaseosas')
-test_set3  <- column_mean_quantile_binning(test_set3,  'consumo_semanal_gaseosas')
-
-segmented_box_plot(
-  test_set3, 
-  column        = 'peso', 
-  segmented_by  = 'dias_actividad_fisica_semanal',
-  title         = 'Niveles actividad fisica ordenados por la mediana del peso en Test',
-  y_label       = 'Peso (Kg)',
-  y_limits      = c(40, 100),
-  x_label       = 'Niveles de actividad física (Dias)'
-)
-```
-
-**Modelo 5**
-
-$E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + + \beta_3 * genero + \beta4 * consumoSemanalSnacks + \\ \beta_5 * diasActividadFisicaSemanal + \beta_6 * consumoSemanalFrutas + \beta_7 * consumoSemanalVerduras + \\* \beta_8 * consumoSemanalGrasas + \beta_9 * consumoSemanalGaseosas$
-
-Se utilizo la redefinición de la variable **consumo_semanal_snacks** como base. Ademase se agregar
-la variable consumo_semenal_frutras/verduras/grasas/gaseaosas entendiendo que también tiene una
-influencia importante en el peso.
-
-```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
-model_5 <- lm(
-  peso ~ 
-  edad +
-  genero +
-  altura +
-  consumo_semanal_snacks +
-  consumo_semanal_frutas + 
-  consumo_semanal_verdura,
-  data = train_set3
-)
-
-coefficients_summary(model_5)
-anova_summary(model_5)
-glance(model_5)
-```
-
-```{r}
-c(models, list('Modelo 4'=model_4, 'Modelo 5'=model_5)) %>% 
-  map_df(glance, .id = "model") %>%
-  arrange(desc(adj.r.squared))
-```
-
-Finalmente, si comparamos los modelos por $R^2$ Ajustado, se puede apreciar que el modelo 5 (con
-todas las variables categóricas re-definidas) llega a captar la mayor varianza explicada sobre el
-dataset de entrenamiento. Por supuesto esto no dice nada acerca de la performance del modelo en
-test, pero si que tiene la mejor capacidad para extraer información de los dato de entrenamiento.
-
-### 4.2. ¿Cuál es el mejor modelo para nuestro objetivo de predecir el peso? ¿Por qué?
-
-Ahora comparamos la performance de todo los modelos al evaluar el error delos mismo al predecir el
+Ahora comparamos la performance de todo los modelos al evaluar el error de los mismo al predecir el
 peso en el conjunto de train y test tanto para RMSE como MAE:
 
 **RMSE**
 
-```{r fig.align='center', warning=FALSE}
-custom_models_evaluation_summary(
-  model_1, model_2, model_2_redefinicion_1, model_4, model_5,
-  test_set, train_set_snack_1, test_set3,
-  metric_fn = rmse
-)
+```{r}
+eval_summary <- function(metric_fn = rmse) {
+  summary_part_1 <- list(
+    'Modelo 1' = model_1, 
+    'Modelo 2' = model_2, 
+    'Modelo 3' = model_3,
+    'Modelo 4' = model_4
+  ) %>% train_test_eval_metric_summary(test_set = test_set, metric_fn = metric_fn)
+  
+  summary_part_2 <- list('Modelo 2 - Re-definición 1' = model_2_redefinicion_1) %>% 
+    train_test_eval_metric_summary(test_set = test_set_snack_1, metric_fn = metric_fn)
+  
+  summary_part_3 <- list('Modelo 2 - Re-definición 2' = model_2_redefinicion_2) %>% 
+    train_test_eval_metric_summary(test_set = test_set_snack_2, metric_fn = metric_fn)
+  
+  summary <- summary_part_1 %>% 
+    union_all(summary_part_2) %>% 
+    union_all(summary_part_3) %>%
+    arrange(test)
+  
+  min_test_error <- summary %>% 
+    pull(test) %>% 
+    min()
+  
+  summary %>% mutate(diff_min_test = abs(test - min_test_error))
+}
+
+eval_summary_result <- eval_summary(rmse)
+eval_summary_result
 ```
 
-Si utilizamos la métrica RMSE podemos ver que el modelo 5 tiene el menor error en el conjunto de
-test. Por otro lados el que tiene la mayor diferencia de error entre test y entrenamiento. Esto nos
-dice que podría estar sobre-ajustandose al conjunto de entrenamiento. El modelo 3 tiene un error en
-test muy cercano y ademas tiene un diferencia entre test y train mucho menor. por esto ultimo parece
-ser el mejor modelo ya que tiene prácticamente el menor error posible y también el menor
-sobre-ajuste al conjunto de entrenamiento.
+Si utilizamos la métrica RMSE podemos ver que el modelo **Modelo 2 - Re-definición 1** tiene el menor error
+al evaluarlo con el conjunto de test. Por otro lado, el que tiene menor diferencia de error entre test y entrenamiento. Esto nos dice que tiene el menor grado de sobre-ajuste (overfitting) al conjunto de entrenamiento. 
+
+El **Modelo 4**  por otro lado es el que mas se ajusta al conjunto de entrenamiento ya que tiene el menor error en train
+y ademas la mayor diferencia entre train y test. Sucede algo muy similar con el modelo **Modelo 3** pero en menor medida.
+
+Otro punto a tener es la diferencia en el error en test para **Modelo 2 - Re-definición 1**  y **Modelo 4**. Parece ser una diferencia my baja en términos de error lo que sugiere que performan de formar similar para este conjunto de test, pero
+no podemos asegurarlo con otro conjunto de tst distinto. Por todas estas cuestiones bajo la metrica RMSE el modelo
+ **Modelo 2 - Re-definición 1** parece ser el mas razonable.
 
 **MAE**
 
 ```{r warning=FALSE}
-custom_models_evaluation_summary(
-  model_1, model_2, model_2_redefinicion_1, model_4, model_5,
-  test_set, train_set_snack_1, test_set3,
-  metric_fn = mae
-)
+eval_summary(mae)
 ```
 
-Si medimos a partir del MAE sucede algo muy similar, El modelo 3 es es que tiene menor error y
-ademas menos sobre-ajuste.
+Usan la métrica MAE el **Modelo 4** es el que tiene el menor error en test seguido de **Modelo 2 - Re-definición 1**.
+**Modelo 2 - Re-definición 1** parece ser el modelo que menos sobre-ajuste y sorprendente-mente el **Modelo 4** a pesar de ser
+el que menos error tiene el test también es el que mas sobre ajusta al conjunto de test dado. Por esta ultima cuestión
+la mejor opción el el modelo **Modelo 2 - Re-definición 1** ya que el modelo **Modelo 4** es el que peor generaliza.
 
-Finalmente, según ambas metricas el moejor modelo es el **Modelo 3**.
+Finalmente, según ambas métricas **Modelo 2 - Re-definición 1** es el modelo mas adecuado.
 
 ## 5. Diagnóstico del modelo
 
@@ -683,7 +685,7 @@ Si observamos el gráfico de **Residuos vs Apalacamiento** vemos varias observac
 que se alejan a derecha del cumulo principal. Estos ejercen un alejamiento de las prediciones del
 modelo vs los valores reales a partir de un apalancamiento(leverage) 0.0025 y es mas pronunciado
 desde 0.0035. Finalmente, vemos un grado importante de desvió de las predicciones vs valores reales
-y porn ente un grado importante de apalancamiento(leverage).
+y por ente un grado importante de apalancamiento(leverage).
 
 A continuación se pueden ver lo individuos que producen mayor apalancamiento(leverage) y por ende
 sesgo en las predicciones del modelo:
@@ -696,47 +698,38 @@ augment(model_1) %>%
 
 ## 6. Modelo Robusto
 
-Leer el archivo "encuesta_salud_modelo6.csv". Este último consiste en el dataset original de train
+### 6.1. Leer el archivo "encuesta_salud_modelo6.csv". Este último consiste en el dataset original de train
 con la incorporación de algunas observaciones adicionales que pueden incluir valores atípicos. En
-particular, observar la relación entre peso y altura ¿Qué ocurre con estos nuevos datos? Entrenar el
-modelo inicial con estos nuevos datos y comentar qué se observa en los coeficientes estimados y las
-métricas de evaluación (R cuadrado ajustado, RMSE y MAE) respecto al modelo entrenado con el set de
-entrenamiento original. Entrenar un modelo robusto con la misma especificación que el modelo inicial
-sobre los nuevos datos. Comparar los coeficientes y su performance (RMSE y MAE) respecto al modelo
-inicial no robusto entrenado en este punto. ¿Qué puede concluir al respecto?
+particular, observar la relación entre peso y altura ¿Qué ocurre con estos nuevos datos?
 
-Se carga el conjunto de entrenamiento en crudo,e s decir sin pre-procesamiento. Luego se resumen los
-valores de las variables categóricas y se eliminan missing values, ya que siguen siendo muy poco
-casos:
+A continuación se carga el conjunto de entrenamiento en crudo, es decir sin pre-procesamiento. Luego
+se resumen los valores de las variables categóricas y se tranforman lo misssings a NA's:
 
 ```{r warning=FALSE}
-original_train_set <- shorten_values(preprocess(load_original_train_set()))
-missings_summary(original_train_set)
-new_train_set <- process_missings(original_train_set)
-missings_summary(new_train_set)
+original_train_set <- load_original_train_set() %>% 
+  preprocess() %>% 
+  shorten_values() %>% 
+  process_missings()
+
+original_train_set %>% missings_summary()
 ```
 
-```{r}
-nrow(original_train_set)
-nrow(new_train_set)
-```
-
-Comparemos las distribuciones del peso vs altura en ambos conjunto de entrenamiento:
+Se aprecia que hay muy pocos missing values. Por otro lado estos no se eliminan ya que el modelo
+lineal por defecto los filtra. Comparemos las distribuciones del peso vs. altura en ambos conjunto
+de entrenamiento:
 
 ```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
-box_plots(
-  train_set %>% select(peso, altura), 
-  title = 'Comparativas de distribuciones del peso y la altura'
-)
-
-box_plots(
-  new_train_set %>% select(peso, altura), 
-  title = 'Comparativas de distribuciones del peso y la altura'
-)
+box_plots(train_set %>% select(peso, altura), title = 'Peso va Altura train_set')
+box_plots(original_train_set %>% select(peso, altura), title = 'Peso va Altura original_train_set')
 ```
 
 En el dataset de entrenamiento original la variable peso tiene prácticamente el doble de outliers
 que el dataset procesado.
+
+
+### 6.2. Entrenar el modelo inicial con estos nuevos datos y comentar qué se observa en los coeficientes 
+estimados y las métricas de evaluación (R cuadrado ajustado, RMSE y MAE) respecto al modelo entrenado 
+con el set de entrenamiento original.
 
 **Modelo 6**
 
@@ -744,8 +737,8 @@ Definimos un modelo igual al **modelo 1** pero entrenando en el dataset de entre
 
 ```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
 model_6 <- lm(
-  peso ~ altura + edad + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
-  data = new_train_set
+  peso ~ altura + edad + genero + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
+  data = original_train_set
 )
 
 coefficients_summary(model_6)
@@ -754,22 +747,29 @@ glance(model_6)
 ```
 
 ```{r}
-print(paste('Disminicion de adj.r.squared:', abs(0.352113 - 0.2734821) * 100, '%'))
+compare_r2(model_1, model_6)
 ```
 
-Dada la presencia de outliers en la variable peso, el $R^2$ Ajustado baja con respecto al **modelo
-1**.
+Hay una diferencia porcentual muy alta del $R^2$ ajustado en ambos modelos. El hecho de que existan outliers 
+en el train set original produce que disminuya la explicabilidad del mismo en train.
+
 
 ```{r}
-models <- list('Modelo 6'=model_6)
-
-models_evaluation_summary(models, train_set, metric_fn = rmse)
-models_evaluation_summary(models, train_set, metric_fn = mae)
+models <- list('Modelo 1' = model_1, 'Modelo 6' = model_6)
+models %>% eval_models_summary(test_set,  metric_fn = rmse)
+models %>% eval_models_summary(test_set,  metric_fn = mae)
 ```
 
-Por otro lado, aumento el error de predicción tanto en train como en test. Finalmente, el modelo
-tiene un grado de overfitting mucho mayor que los modelos anteriores, ya que la métrica de
-evaluación en test y train tiene una diferencia muy pronunciada de 1.7 puntos.
+En este caso los resultados son muy consistentes con ambas métricas (RMSE y MAE). En ambos caso el 
+**Modelo 1** es el que logra un menor error en test, ademas de tener la menor diferencia entre train y test.
+Por otro lado, con ambas métricas se aprecia que el **Modelo 6** tiene peor performance en train que en test.
+Esto podría deberse a que el modelo tiene ejemplos mas difíciles de ajustar en train que en test, ya sea por 
+efecto de los outliers o por que existe algún ejemplo extra el cual es difícil de ajustar para el modelo.
+A pesar de esto, hay muy poca diferencia midiendo el RMSE train vs. test para ambos modelos.
+
+### 6.3. Entrenar un modelo robusto con la misma especificación que el modelo inicial
+sobre los nuevos datos. Comparar los coeficientes y su performance (RMSE y MAE) respecto al modelo
+inicial no robusto entrenado en este punto. ¿Qué puede concluir al respecto?
 
 **Modelo 7**
 
@@ -777,26 +777,24 @@ Definimos un modelo igual al **modelo 1** entrenando en el dataset de entrenamie
 usamos un modelo lineal robusto.
 
 ```{r}
-model_7 <- rlm(
-  peso ~ altura + edad + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
-  data = new_train_set
+model_robusto <- rlm(
+  peso ~ altura + edad + genero + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
+  data = original_train_set
 )
-coefficients_summary(model_7)
+
+coefficients_summary(model_robusto)
+
+models <- list('Modelo 1' = model_1, 'Modelo Robusto' = model_robusto)
+models %>% eval_models_summary(test_set,  metric_fn = rmse)
+models %>% eval_models_summary(test_set,  metric_fn = mae)
 ```
 
-```{r}
-anova_summary(model_7)
-```
+Midiendo con RMSE los resultados son muy similares al punto anterior. En este caso el **Modelo Robusto** pierde 
+con respecto al **Modelo 1**, inclusive por una diferencia mucho mas grande en test que el **Modelo 6**. El modelo 
+robusto sufre del mismo problema que el **Modelo 6** donde tenemos un error en train mayor que test. Ahora
+Midiendo con MAE los resultados se invierten y el **Modelo Robusto** gana por una diferencia poco significativa.
 
-```{r}
-models <- list('Modelo 6'=model_6, 'Modelo 7'=model_7)
-
-models_evaluation_summary(models, test_set, metric_fn = rmse)
-models_evaluation_summary(models, test_set, metric_fn = mae)
-```
-
-El modelo lineal robusto (Modelo 7) parece tener un menor error de entrenamiento muy cercano al
-modelo 6, pero tiene mayor sobre- ajuste que el modelo 6, aunque es una diferencia muy baja.
-
-Dado esto, seria una buena selecciono elegir el modelo 7, ya que el sobre ajuste practicamente no
-cambia y obtenemos un error de predicción en test ligeramente menor.
+Como conclusión, no parece claro que el **Modelo Robusto** o el **Modelo 6** mejor que el **Modelo 1** en otro 
+conjunto de test distinto. Por otro lado, pareciera que el dataset original con outliers esta dificultando el 
+ajuste de los modelos en el entrenamiento. ^por otro lado no se aprecia una diferencia significativa en la performance
+del **Modelo 6** y el **Modelo Robusto**.

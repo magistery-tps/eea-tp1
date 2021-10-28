@@ -115,24 +115,77 @@ shorten_values <- function(df) {
   table
 }
 
-column_mean_quantile_binning <- function(
+
+binning_mean_quantiles_to_3_levels <- function(
   df,
-  column,
-  mean_column = 'peso',
-  levels      = c('Bajo', 'Medio', 'Alto')
+  group_column,
+  mean_column,
+  quantiles,
+  levels  = c('Bajo', 'Medio', 'Alto')
 ) {
-  mean_df <- df %>% 
-    group_by(!!sym(column)) %>%
-    summarise(mean_col = mean(!!sym(mean_column)))
+  quantiles <- df %>% 
+    group_by(!!sym(group_column)) %>%
+    summarise(value = mean(!!sym(mean_column))) %>% 
+    pull(value) %>%
+    quantile()
   
-  df %>%
+  print('Cuantiles:')
+  print(quantiles)
+  
+  result <- df %>%
     mutate(
-      !!column :=  case_when(
-        !!sym(mean_column) <  quantile(mean_df$mean_col)[2] ~ levels[1],
-        !!sym(mean_column) >= quantile(mean_df$mean_col)[4] ~ levels[3],
+      !!group_column :=  case_when(
+        !!sym(mean_column) <  quantiles[2] ~ levels[1],
+        !!sym(mean_column) >= quantiles[4] ~ levels[3],
         TRUE ~ levels[2]
       )
     ) %>% 
-    mutate(!!column := as.factor(!!sym(column)))
+    mutate(!!group_column := as.factor(!!sym(group_column)))
+  
+  show_groups(result, group_column)
+  
+  result
+}
+
+
+
+show_groups <- function(result, group_column) {
+  print('Grupos:')
+  groups <- result %>%
+    group_by(!!sym(group_column)) %>%
+    tally() %>% 
+    arrange(desc(n))
+  printTable(groups)
+}
+
+binning_mean_multiply_quantiles_to_3_levels <- function(
+  df,
+  group_column,
+  column_a,
+  column_b,
+  levels  = c('Bajo', 'Medio', 'Alto')
+) {
+  quantiles <- df %>% 
+    group_by(!!sym(group_column)) %>%
+    summarise(value = mean(!!sym(column_a) * !!sym(column_b))) %>% 
+    pull(value) %>% 
+    quantile()
+
+  print('Cuantiles:')
+  print(quantiles)
+
+  result <- df %>%
+    mutate(
+      !!group_column := case_when(
+        !!sym(column_a) * !!sym(column_b) <  quantiles[2] ~ levels[1],
+        !!sym(column_a) * !!sym(column_b) >= quantiles[4] ~ levels[3],
+        TRUE ~ levels[2]
+      )
+    ) %>%
+    mutate(!!group_column := as.factor(!!sym(group_column)))
+
+  show_groups(result, group_column)
+  
+  result
 }
 
