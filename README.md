@@ -27,3 +27,15 @@ $ cd dm-tp2
 ```bash
 $ open -na Rstudio .
 ```
+
+### Ejecutar Notebook
+
+antes de ejecutar loas notebooks en necesario isntalas el sistema el gestor de paquetes que se se utiliza en las mismas. Para esto se debe isntalar el paquete [pacman](https://github.com/trinker/pacman) usando el mode de instalacion pro defecto en R como sigue:
+
+```R
+install.packages('pacman')
+```
+
+[pacman](https://github.com/trinker/pacman) instala y carga los paquetes mediante la funcion `p_load` por no es necesari preocuparse en instarl al librerias.
+
+Finalmente es importante aclarar que el dataset ya esta incluido en el proyecto.
