@@ -36,6 +36,6 @@ antes de ejecutar loas notebooks en necesario isntalas el sistema el gestor de p
 install.packages('pacman')
 ```
 
-[pacman](https://github.com/trinker/pacman) instala y carga los paquetes mediante la funcion `p_load` por no es necesari preocuparse en instarl al librerias.
+[pacman](https://github.com/trinker/pacman) instala y carga los paquetes mediante la funcion `p_load` por no es necesario preocuparse en instalar las librerias.
 
 Finalmente es importante aclarar que el dataset ya esta incluido en el proyecto.
