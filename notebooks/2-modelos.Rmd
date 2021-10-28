@@ -51,10 +51,9 @@ import('../src/preprocessing.R')
 import('../src/model.R')
 import('../src/plot.R')
 ```
-
-A continuación se carga los conjuntos de entrenamiento y test. también se resumen los valores de las
-variables categóricas y se excluyen las observaciones con valores faltantes, ya que son muy pocas
-con respecto al total.
+A continuación se carga los conjuntos de entrenamiento y test. También se resumen los valores de las
+variables categóricas y transforman todo los valores faltantes a NA's ya que el modelo lineal los excluye 
+por defecto. Fuera de esto tenemos muy pocos valores faltantes como ya analizamos en la notebook [eea-tp1-eda](https://rpubs.com/adrianmarino/eea-tp1-eda).
 
 ```{r message=FALSE, warning=FALSE}
 train_set <- load_train_set() %>% 
@@ -68,11 +67,15 @@ test_set <- load_test_set() %>%
   process_missings()
 ```
 
+Validamos la estrutura de los datos:
+
 ```{r}
 glimpse(train_set)
 ```
 
-Se fija la semilla y se validan las proporciones de los conjuntos de entrenamiento y test:
+Las variables categóricas se transforman a factores ordinales o no ordinales según sea el caso.
+
+A contunuación se fija la semilla y se validan las proporciones de los conjuntos de entrenamiento y test:
 
 ```{r}
 set.seed(25)
@@ -106,35 +109,31 @@ Al analizar cada coeficiente se encuentra que:
     y no puede tener un peso negativo, pero si podría no realizar actividad física ni consumir
     alcohol.
 
--   El coeficiente $\hat{\beta_1}$ de valor 653 gramos, corresponde a la altura del individuo. Este
+-   El coeficiente $\hat{\beta_1}$ de valor 650 gramos, corresponde a la altura del individuo. Este
     coeficiente indica que dada una edad, genero, consumo de alcohol diario y días de actividad
     física semanal fijos, cada incremento en 1 cm adicional en la altura del individuo implica un
-    aumento de su peso esperado o promedio de 653 gramos.
+    aumento de su peso esperado o promedio de 650 gramos.
 
--   El coeficiente $\hat{\beta_2}$ de valor 1.378 kg, corresponde a la edad del individuo. Este
+-   El coeficiente $\hat{\beta_2}$ de valor 1.4 kg, corresponde a la edad del individuo. Este
     coeficiente indica que dada una altura, genero, días de actividad física y consumo de alcohol
     diario fijos, cada vez que el individuo cumple un año su peso esperado o promedio aumenta en
-    1.378 kg.
+    1.4 kg.
 
--   El coeficiente $\hat{\beta_3}$ de valor 1.224 kg, corresponde a los individuos de genero
+-   El coeficiente $\hat{\beta_3}$ de valor 1.26 kg, corresponde a los individuos de genero
     masculinos. Este coeficiente indica que dada una altura, edad, consumo de alcohol diario y días
-    de actividad física semanal fijos, el peso promedio o esperado para el genero masculino es 1.224
-    kg mayor al peso femenino (categoría basal). Por otro lado, el coeficientes no indica cunado mas
+    de actividad física semanal fijos, el peso promedio o esperado para el genero masculino es 1.26
+    kg mayor al peso femenino (categoría basal). Por otro lado, el coeficientes nos indica cuanto mas
     alto es el peso del genero masculino respecto del femenino al fijar los demás coeficientes.
 
--   El coeficiente $\hat{\beta_4}$ de valor 99.1 gramos, corresponde a los días de actividad física
+-   El coeficiente $\hat{\beta_4}$ de valor 87.1 gramos, corresponde a los días de actividad física
     semanal que realiza el individuo. Este coeficiente indica que dada una altura, edad, genero y
-    consumo de alcohol diario, cada vez que un individuo realiza un día mas de actividad física
-    semanal su peso esperado o promedio disminuye en 99.1 gramos.
+    consumo de alcohol diario fijos, cada vez que un individuo realiza un día mas de actividad física
+    semanal su peso esperado o promedio disminuye en 87.1 gramos.
 
--   El coeficiente $\hat{\beta_5}$ de valor -8 gramos, corresponde al nivel de consumo diario de
+-   El coeficiente $\hat{\beta_5}$ de valor 7 gramos, corresponde al nivel de consumo diario de
     alcohol del individuo. Este coeficiente indica que dada una altura, edad, genero y días de
     actividad física semanal fijos, cada vez que el individuo consume un trago de alcohol su peso
-    esperado o promedio disminuye en 8 gramos. A simple vista podrá no llegar a tener sentido, ya
-    que a mayor consumo de alcohol el peso debería aumentar, ya sea por el peso del propio liquido
-    como el peso equivalente en grasas. Entiendo que puede tener un relación con los rangos de
-    edades de los individuos que mas consumen alcohol (12 q 17 años), ya que estos se encuentran en
-    pleno crecimiento.
+    esperado o promedio aumenta en 8 gramos.
 
 ### 2.3. ¿Son significativos los coeficientes?
 
@@ -145,50 +144,50 @@ ${T}$ test para cada coeficiente en el cual se evalúan las siguientes hipótesi
 -   ${H_1: \beta_i \neq 0}$
 
 Si ${\beta_i \neq 0}$ podemos decir que existe una diferencia estadisticamente significativas del
-cero para coeficiente ${\beta_i}$, y por lo tanto el coeficiente ${\beta_i}$ explicar la variable
+cero para el coeficiente ${\beta_i}$, y por lo tanto el coeficiente ${\beta_i}$ explicar la variable
 ${y}$ (Peso en nuestro caso).
 
 Luego analizando la salida de **coefficients_summary** concluimos que:
 
--   Los coeficientes correspondientes al acategoria basal ${\beta_1}$(Genero femenino),
+-   Los coeficientes correspondientes a la categoria basal ${\beta_1}$(Genero femenino),
     altura(${\beta_1}$), edad(${\beta_2}$) y genero masculino (${\beta_3}$) tienen $p-valor < 0.05$.
     Por lo tanto, se rechaza la hipótesis nula y resultan estadistitamente significativos para
     explicar el peso. Por otro lado, se puede apreciar que los intervalos de confianza del 95% no
     incluyen al cero.
 -   Lo contrario sucede con días de actividad física semanal(${\beta_4}$) y consumo de alcohol
-    diario (${\beta_5}$), dado que ambos no rechazar la hipótesis nula ($p-valor > 0.05$) y por lo
+    diario (${\beta_5}$), dado que ambos no rechazar la hipótesis de nulidad ($p-valor > 0.05$) y por lo
     tanto no existe una diferencia significativa del cero. Finalmente, no hay evidencia
-    estadistitamente significativas de que estos coeficientes expliquen al peso.
+    estadistitamente significativas pensar que estos coeficientes expliquen el peso.
 
 ### 2.4. ¿El modelo resulta significativo para explicar el peso?
 
 Para determinar si es modelo es significativo para explicar el peso de un individuo se realiza un
 $F$ test con las siguientes hipótesis:
 
--   $H_0: β_1 = β_2 = · · · = β_{p−1} = 0$
--   $H_1:$ Por lo menos un $β_k$ ($k = 1, 2,..., p−1$) es distinto de 0.
+-   $H_0: {\beta_1} = {\beta_2} = · · · = {\beta_{p−1}} = 0$
+-   $H_1:$ Por lo menos un ${\beta_k}$ ($k = 1, 2,..., p−1$) es distinto de 0.
 
-Donde: \* $H_0$ afirma que no hay vinculo entre la variable ${y}$(Peso) y las variables regresoras.
-\* $H_1$ afirma que al menos una de las variables regresoras sirve para predecir la variable ${y}$
-(Peso).
+Donde: 
 
-Veamos los resultados el $F$ test:
+- $H_0$ afirma que no hay vinculo entre la variable ${y}$(Peso) y las variables regresoras.
+- $H_1$ afirma que al menos una de las variables regresoras sirve para predecir la variable ${y}$(Peso).
+
+Veamos los resultados del $F$ test:
 
 ```{r}
 glance(model_1)
 ```
 
-Podemos apreciar que el $p-valor < 0.05$ e igual a 0. Con mucha certeza podemos decir que al menos
+Podemos apreciar que el $p-valor < 0.05$ y igual a 0. Con mucha certeza podemos decir que al menos
 una de las variables regresoras permite explicar el peso. Esto concuerda con los resultados de los
-$T$ test para las los coeficientes correspondientes a altura, edad y genero femenino(basa) y
-masculino).
+$T$ test para los coeficientes correspondientes a altura, edad y genero femenino(basa) y masculino.
 
 ### 2.5. ¿Qué porcentaje de la variabilidad explica el modelo?
 
-Según el valor de $R^2$ ajustado (**adj.r.squared**), este modelo llega a explica el 35% de la
-variabilidad del dataset de entrenamiento, lo cual no es un valor bajo pero tampoco es despreciable.
+Según el valor de $R^2$ ajustado (**adj.r.squared**), este modelo llega a explica el 35.39% de la
+variabilidad del dataset de entrenamiento, lo cuales un valor bajo pero tampoco es despreciable.
 
-### 2.6. ¿Que sucede si poner al genero masculino como variable basal?
+### 2.6. ¿Que sucede si ponemos al genero masculino como variable basal?
 
 ```{r}
 train_set_genero <- data.frame(train_set) 
@@ -215,13 +214,13 @@ coefficients_summary(model_genero)
 glance(model_genero)
 ```
 
-**Observaciones**
+Observaciones:
 
--   En este caso, cambia el coeficiente $\beta_0$ para la categoría basal, manteniéndose los demás
+-   En este caso, cambia el valor del coeficiente $\hat\beta_0$ para la categoría basal, manteniéndose los demás
     coeficientes.
--   Siguen siendo significativos los mismo coeficientes. La unica diferencia es que $\beta_0$(basal)
-    representa al genero masculino y $\beta_3$ al femenino.
--   Se mantiene la significatividad global del modelo y el mismo $R^2$.
+-   Siguen siendo significativos los mismo coeficientes. La única diferencia es que $\hat\beta_0$(basal)
+    representa al genero masculino y $\hat\beta_3$ al femenino.
+-   Se mantiene la significatividad global del modelo y se obtiene el mismo $R^2$ ajustado.
 -   Como ultimo, cabe aclarar que al cambiar la categoría basar cambian las interpretaciones del
     modelo.
 
@@ -240,7 +239,20 @@ table(train_set$genero)
 ```
 
 Se puede apreciar que la primeras categorías corresponden a 0 consumo de snacks semanal y genero
-femenino. Por otro lado la categoría genero se encuentra balanceada.
+femenino. Por otro lado la categoría genero se encuentra balanceada en gran medida.
+
+A continuación se cambiar la variable factor a no ordenada para que aparezcan correctamente valores de las categorías en los coeficientes:
+
+```{r}
+train_set_model_1 <- train_set 
+
+train_set_model_1$consumo_semanal_snacks <- factor(
+  train_set_model_1$consumo_semanal_snacks,
+  levels=c("0", "<=3", "4-6", "7", "14", "21", ">=28"), 
+  ordered=FALSE
+)
+```
+
 
 **Modelo 2**
 
@@ -249,37 +261,37 @@ Definimos el nuevo modelo:
 ```{r}
 model_2 <- lm(
   peso ~ altura + edad + genero + consumo_semanal_snacks +  genero * edad, 
-  data = train_set
+  data = train_set_model_1
 )
 ```
 
-### 3.2. ¿Cuál es la interpretación de los coeficientes estimados para las categorías de consumo_semanal_snacks y genero \* edad? ¿Son significativas?
+### 3.2. ¿Cuál es la interpretación de los coeficientes estimados para las categorías de consumo_semanal_snacks y genero * edad? ¿Son significativas?
 
 ```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
-coefficients_summary(model_2)
+coefficients_summary(model_2, show_tidy_sumamry = FALSE)
 ```
 
 Si interpretamos los coeficientes que son significativos para el $T$ test:
 
-1.  Coeficiente correspondiente al **consumo_semanal_snacks\<=3**:
+1.  Coeficiente correspondiente al **consumo_semanal_snacks<=3**: Si fijamos los coeficientes correspondientes a la altura, edad, generoMasculino y edad:generoMasculino; el peso promedio o esperado de un individuo de consume snacks hasta 3 veces por semana es 1.33 kg menor que aquellos que no consumen snacks.
 
-Si fijamos los coeficientes correspondientes a la altura, edad, generoMasculino y
-generoMasculino\*edad; el peso promedio o esperado de un individuo de consume snacks hasta 3 veces
-por semana es 1.43 kg menor que aquellos que no consumen snacks.
-
-2.  Sucede algo similar con las categorias **consumo_semanal_snacks4-6** y
+2.  Sucede algo similar con las categorías **consumo_semanal_snacks4-6** y
     **consumo_semanal_snacks>=28** donde:
 
--   El peso para un individio que consume de 4 a 6 veces por semana es 2.25 kg menor que aquellos
-    con no consumen snacks.
--   El peso para un individio que consume 28 veces a mas por semana es 2.6 kg menor que aquellos con
-    no consumen snacks.
+-   El peso para un individuo que consume de 4 a 6 veces por semana es 2.26 kg menor que aquellos
+    que no consumen snacks.
+-   El peso para un individuo que consume 28 veces a mas por semana es 2.56 kg menor que aquellos que
+    no consumen snacks. 
 
-3.  Coeficiente correspondiente al **edad \* genero**:
+Puede parecer contradictorio que os que mas consumen snacks menos pesan, pero pensemos que no tenemos desglose de esta categorías. Hoy en día se consumen muchos snacks saludables, los cuales no tienen grasas, pero también existen los tradicionales ricos en grasas como papas fritas, palitos con queso, 3D, etc. 
+Según los coeficientes que obtuvimos con este dataset, se podría pensar que los individuos están consumiendo
+en mayor medida snacks saludables, pero solo podemos asegurarlo si incluimos la variables tipo de snack.
+
+3.  Coeficiente correspondiente al **edad * genero**:
 
 Dado el modelo original:
 
-$E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + \beta_3 * genero + \ \beta4 * consumoSemanalSnacks + \beta_5 * genero * edad$
+$E(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + \beta_3 * genero + \ \beta4 * consumoSemanalSnacks + \beta_{2,3} * genero * edad$
 
 y sabiendo que el genero femenino toma el valor 0 y masculino 1. Si reemplazamos estos valores en el
 modelo original encontramos que:
@@ -289,27 +301,33 @@ $E_f(peso) = \beta_0 + \beta_1 * altura + \beta_2 * edad + \beta_4 * consumoSema
 El genero femenino tiene la ordenada $\beta0$ y las pendientes determinada por $\beta_1$, $\beta_2$
 y $\beta_4$.
 
-$E_m(peso) = (\beta_0 + \beta_3) + \beta_1 \* altura + (\beta_2 + \beta_2,3) * edad + \ \beta_4 * consumoSemanalSnacks$
+$E_m(peso) = (\beta_0 + \beta_3) + \beta_1 * altura + (\beta_2 + \beta_{2,3}) * edad + \ \beta_4 * consumoSemanalSnacks$
 
 El genero masculino tiene una ordenada que es la suma de la ordenada del genero femenino $\beta_0$
-mas $\beta_3$. Luego cambia la pendiente $\beta_2$ de la edad, a la cual se le suma $\beta_2,3$
+mas $\beta_3$. Tambien cambia la pendiente de $\beta_2$ de la edad, a la cual se le suma $\beta_{2,3}$.
 
-Luego, sabiendo que solo cambian los coeficientes correspondientes al genero y edad, si mantenemos
+Ahora, si solo cambian los coeficientes correspondientes al genero y edad, es decir si mantenemos
 contantes los demás coeficientes obtenemos:
 
 -   $E_f(peso) = \beta_0 + \beta_2 * edad + cte$
--   $E_m(peso) = (\beta_0 + \beta_3) + (\beta_2 + \beta_2,3) * edad$
+-   $E_m(peso) = (\beta_0 + \beta_3) + (\beta_2 + \beta_{2,3}) * edad$
 
-Ahora reemplazamos por los coeficientes por lo valores que encontró el modelo:
+Reemplazamos por los coeficientes por lo valores que encontró el modelo:
 
 -   Femenino:
 
-    -   $E_f(peso) = -65.56456109 + 1.22539002 edad + cte$
+    -   $E_f(peso) = -64.2548500 + 1.2253900 * edad + cte$
 
 -   Masculino:
 
-    1.  $E_m(peso) = (-65.56456109 + -4.60464631) + (1.22539002 + 0.38927567) * edad + cte$
-    2.  $E_m(peso) =-70.1692074 + 1.61466569 * edad + cte$
+    1.  $E_m(peso) = (-64.2548500 +  -4.6046463) + (1.2253900 + 0.3892757) * edad + cte$
+    2.  $E_m(peso) = -68.8595 + 1.614666 * edad + cte$
+
+Finalmente tenemos:
+
+- $E_f(peso) = -64.2548500 + 1.2253900 * edad + cte$
+- $E_m(peso) = -68.8595 + 1.614666 * edad + cte$
+
 
 Finalmente, graficamos ambas rectas definiendo la $cte$ con un valor que de pesos positivos para
 tener una gráfica consistente:
@@ -321,8 +339,8 @@ train_set %>%
   mutate(
     peso = ifelse(
       genero=='Femenino', 
-      (-65.56456109 + 1.22539002 * edad) + cte,
-      (-70.1692074 + 1.61466569 * edad) + cte
+      (-64.2548500 + 1.2253900 * edad) + cte,
+      (-68.8595 + 1.614666 * edad) + cte
     ) 
   ) %>%
   ggplot(aes(x = edad, y = peso, colour=genero)) +
@@ -332,9 +350,9 @@ train_set %>%
 ```
 
 Finalmente, se puede apreciar que las ordenadas de ambos géneros son distintas, donde el genero
-femenino inicia desde un peso menor al masculino. Luego si variamos únicamente la edad, se aprecia
+femenino inicia desde un peso 4kg menor al masculino. Luego si variamos únicamente la edad, se aprecia
 que el peso del genero masculino es mayor al femenino para la misma edad en todo los casos. Esto se
-debe a que la resta correspondiente al genero masculina esta por arriba de la resta correspondiente
+debe a que la recta correspondiente al genero masculina esta por arriba de la resta correspondiente
 al genero femenino.
 
 ### 3.3. ¿Qué porcentaje de la variabilidad explica el modelo? En caso de detectar que existen categorías no significativas de la variable consumo_semanal_snacks evaluar si la variable es significativa en su conjunto y, en caso afirmativo, proponer una redefinición de las mismas que permita obtener una mayor proporción de categorías significativas individualmente. Luego, analizar si existen cambios en la variabilidad explicada por el modelo.
@@ -342,14 +360,14 @@ al genero femenino.
 Viendo el resultado de **coefficients_summary** se aprecia que las siguientes categorías de
 **consumo_semanal_snacks** no son significativas:
 
--   2 veces al día (14 veces/semana)
--   4 a 6 veces durante los últimos 7 (4 a 6 veces semana)
--   3 veces al día (21 veces/semana)
+-   2 veces al día (14 veces/semana).
+-   4 a 6 veces durante los últimos 7 (4 a 6 veces/semana).
+-   3 veces al día (21 veces/semana).
 
 Pero si son significativos los extremos:
 
--   De 1 a 3 veces/semana
--   De 28 o mas veces/semana
+-   De 1 a 3 veces/semana.
+-   De 28 o mas veces/semana.
 
 A continuación se realiza un $F$ test para evaluar la significatividad conjunta de las categóricas
 de la variable **consumo_semanal_snacks** para explicar el peso.
@@ -373,17 +391,18 @@ anova_summary(model_2)
 ```
 
 Podemos apreciar que el $p-value < 0.005$ para la variable **consumo_semanal_snacks**. Por lo tanto
-se rechaza la hipótesis nula y podemos decir en su conjunto resulta estadísticamente significativa
+se rechaza la hipótesis nula y podemos decir que en su conjunto resulta estadísticamente significativa
 para explicar el peso. Luego, como la variable **consumo_semanal_snacks** es significativa vale la
-pena re-definirla. Por otro lado, la combinación de variables genero-edad no es estadísticamente
-significativa para explicar el peso, pero si lo es el genero en forma separada. Finalmente, como ya
-vimos en pasos anteriores, edad y altura son significativas.
+pena re-definirla. 
+Por otro lado, la combinación de variables genero-edad no es estadísticamente significativa para explicar 
+el peso, pero si lo es el genero en forma separada. Finalmente, como ya vimos en pasos anteriores, edad y 
+altura son significativas.
 
 **Modelo 2: Redefinición 1**
 
-Dado que no todas las categorías de la variable **consumo_semanal_snacks** sin significativas a
-continuación se propone una re-definición de sus categorías que hace que todas ellas sean
-significativas para el **modelo 2**.
+Dado que no todas las categorías de la variable **consumo_semanal_snacks** son significativas, a
+continuación se propone una re-definición, en la que se reagrupan las categorías en nuevas categorías 
+que si resulten significativas para el **modelo 2**:
 
 ```{r}
 train_set_snack_1 <- train_set %>% mutate(consumo_semanal_snacks = case_when(
@@ -407,6 +426,14 @@ table(train_set_snack_1$consumo_semanal_snacks)
 table(test_set_snack_1$consumo_semanal_snacks) 
 ```
 
+Como se puede ver, se reagruparan las categorías en 3 grupos:
+
+- 0 veces/semana.
+- Hasta 7 veces/semana.
+- Mas de 14 veces/semana.
+
+Luego entrenamos el **Modelo 2** usnado esta nueva re-definición:
+
 ```{r}
 model_2_redefinicion_1 <- lm(
   peso ~ altura + edad + genero + consumo_semanal_snacks +  genero * edad, 
@@ -422,9 +449,9 @@ glance(model_2_redefinicion_1)
 
 En este caso se propone calcular la media del ratio **altura/edad** para cada categoría de la
 variables **consumo_semanal_snacks**. Luego calculamos los cuantiles de esta nueva distribución y
-los utilizamos para crear una nueva categorización: los individuos que tenga un ratio menor al
-cuantil 2 tendran el valor **Bajo** y **Alto** en caso contrario. Se intento llevar a mas niveles
-pero el test $T$ no daba significativo para todos los coeficientes del **modelo 2**.
+los utilizamos para crear una nueva categorización: Los individuos que tenga un ratio menor al
+cuantíl 2 (Mediana) tendran el valor **Bajo** y **Alto** en caso contrario. Se intento llevar a mas niveles 
+pero el test $T$ no daba significativo para todos los coeficientes.
 
 1.  Definimos la districión altura/edad por categoria de **consumo_semanal_snacks**:
 
@@ -441,14 +468,14 @@ ggplot(data = avg_train_set_snack_2, aes(x = avg_alt_edad_ratio)) +
   theme_bw()
 ```
 
-Se los siguientes cuantiles utilizaremos el cuantil 2(50%):
+DE los siguientes cuantíles utilizaremos el cuantíl 2(Mediana o 50%):
 
 ```{r}
 quantiles_avg_alt_edad_ratio <- quantile(avg_train_set_snack_2$avg_alt_edad_ratio)
 quantiles_avg_alt_edad_ratio
 ```
 
-2.  Creamos un dataset intermedio donde estan mapeadas las categorias originales vs las nuevas:
+2.  Creamos un dataset intermedio donde están mapeadas las categorias originales vs las nuevas:
 
 ```{r}
 q2 <- quantiles_avg_alt_edad_ratio[3]
@@ -463,8 +490,7 @@ snack_level_mapping %>%
   arrange(consumo_semanal_snacks)
 ```
 
-3.  Creamos nuevos dataset de train/test con la nueva definición de la variable
-    **consumo_semanal_snacks**:
+3.  Creamos nuevos dataset de train/test con la re-definición de la variable **consumo_semanal_snacks**:
 
 ```{r fig.height=4, fig.width=5, warning=FALSE, fig.align='center'}
 train_set_snack_2 <- train_set %>%
@@ -501,6 +527,8 @@ anova_summary(model_2_redefinicion_2)
 glance(model_2_redefinicion_2)
 ```
 
+**Conclusión**
+
 ```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
 models <- list(
   'Modelo 1' = model_1, 
@@ -514,9 +542,11 @@ models %>%
   arrange(desc(adj.r.squared))
 ```
 
-**Conclusión**: Ambos modelos son significativos para explicar el peso. El modelo **Modelo 2 -
-Re-definición 1** es mas explicativo, ya que $R^2$ ajustado es mayor. Finamente, ambos modelos son
-meno explicativos que el modelo original(**Modelo 2**).
+Ambos modelos son significativos para explicar el peso. El modelo **Modelo 2 - Re-definición 1** 
+es mas explicativo,  ya que $R^2$ ajustado es mayor par este dataset de entrenamiento. Por otro lado, 
+ambos modelos son menos explicativos que el **Modelo 2** pero mas explicativos que el 
+**Modelo 1** (inicial). Finalmente es importante apreciar que las diferencian del $R^2$ ajustado son muy bajas 
+entre los modelos, deberiamos evaluarlo en test para entnder cual modelo podria performar menor.
 
 ## 4. Modelos propios y evaluación
 
@@ -526,14 +556,15 @@ Al continuación se define 2 modelos.
 
 **Modelo 3**
 
-Para este primer modelo se tiene en cuenta las siguintes variables:
+En base a los resultados de importancia de variables realizados en la notebook de analisis exploratorio, $R^2$ ajustado
+de los resultados y la significación de los coeficientes se seleccionaron las siguoentes variables:
 
-* Altura: Ya que la altura influye en el peso del individio diretamente.
-* Genero: No tiene un relacion directa pero lo individios mascuklino tienen a tener mas altura y por ende mayor peso.
+* Altura: Ya que la altura influye en el peso del individuo directamente.
+* Genero: No tiene un relación directa, pero lo individuos masculinos tienden a tener mas altura y por ende mayor peso.
 * consumo_semanal_snacks y consumo_semanal_comida_grasa: Puede considerarse que estas variables afectan en gran media al aumento de peso.
-* altura * edad: Ya que existe una relación importante entre la edad y la altura en el rango de edades del dataset (12 a 18 años). Esta relación se entiende que que a pecta al peso al igual que la altura. 
+* altura * edad: Ya que existe una relación importante entre la edad y la altura en el rango de edades del dataset (12 a 18 años). Esta relación se entiende que afecta al peso al igual que la altura. 
 *  altura * genero: Parece haber una relación definida entre la altura y el genero, ya que al agregar esta variable
-aumneta ligeramente el $R^2$ Ajustado.
+aumenta ligeramente el $R^2$ Ajustado.
 
 
 ```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
@@ -556,11 +587,11 @@ varImp(model_3)
 
 **Modelo 4**
 
-En este modelo principalmente se busco sumar explicacbilidad al modelo, es decir e mayor $R^2$ posible si
-prestar atencion si las variables son explicativas o sus categorias en caso de ser categoricas. Para esto
-se agregaron todas las variables del tataset y luego quellas combinacion que sumaron $R^2$ en el *modelo 4*.
+En este modelo principalmente se busco sumar explicabilidad al modelo, es decir el mayor $R^2$ ajustado posible sin
+prestar atención si las variables son explicativas o sus categorìas en caso de ser categòricas. Para esto
+se agregaron todas las variables del train_set y luego quellas combinaciòn que sumaron $R^2$ en el *modelo 3*.
 
-```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
+```{r fig.height=7, fig.width=6, warning=FALSE, fig.align='center'}
 model_4 <- lm(
   peso ~
   edad +
@@ -583,13 +614,12 @@ model_4 <- lm(
   data = train_set
 )
 
-coefficients_summary(model_4)
+coefficients_summary(model_4, show_tidy_sumamry = FALSE)
 anova_summary(model_4)
 glance(model_4)
-varImp(model_4)
 ```
 
-Finalmente, si comparamos los modelos por $R^2$ Ajustado, se puede apreciar que el modelo 5 llega a captar la 
+Finalmente, si comparamos los modelos por $R^2$ Ajustado, se puede apreciar que el **Modelo 4** llega a captar la 
 mayor varianza explicada sobre el conjunto de entrenamiento. Por supuesto esto no dice nada acerca de la 
 performance del modelo en test, pero si que tiene la mejor capacidad para extraer información de los dato 
 de entrenamiento.
@@ -628,8 +658,8 @@ eval_summary <- function(metric_fn = rmse) {
   summary %>% mutate(diff_min_test = abs(test - min_test_error))
 }
 
-eval_summary_result <- eval_summary(rmse)
-eval_summary_result
+rmse_eval_summary_result <- eval_summary(rmse)
+rmse_eval_summary_result
 ```
 
 Si utilizamos la métrica RMSE podemos ver que el modelo **Modelo 2 - Re-definición 1** tiene el menor error
@@ -645,7 +675,8 @@ no podemos asegurarlo con otro conjunto de tst distinto. Por todas estas cuestio
 **MAE**
 
 ```{r warning=FALSE}
-eval_summary(mae)
+mae_eval_summary_result <- eval_summary(mae)
+mae_eval_summary_result
 ```
 
 Usan la métrica MAE el **Modelo 4** es el que tiene el menor error en test seguido de **Modelo 2 - Re-definición 1**.
@@ -718,9 +749,9 @@ Se aprecia que hay muy pocos missing values. Por otro lado estos no se eliminan 
 lineal por defecto los filtra. Comparemos las distribuciones del peso vs. altura en ambos conjunto
 de entrenamiento:
 
-```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
-box_plots(train_set %>% select(peso, altura), title = 'Peso va Altura train_set')
-box_plots(original_train_set %>% select(peso, altura), title = 'Peso va Altura original_train_set')
+```{r fig.height=5, fig.width=4, warning=FALSE, fig.align='center'}
+box_plots(train_set %>% select(peso, altura), title = 'Peso vs. Altura en train')
+box_plots(original_train_set %>% select(peso, altura), title = 'Peso vs. Altura en train(Original)')
 ```
 
 En el dataset de entrenamiento original la variable peso tiene prácticamente el doble de outliers
@@ -731,23 +762,23 @@ que el dataset procesado.
 estimados y las métricas de evaluación (R cuadrado ajustado, RMSE y MAE) respecto al modelo entrenado 
 con el set de entrenamiento original.
 
-**Modelo 6**
+**Modelo 5**
 
 Definimos un modelo igual al **modelo 1** pero entrenando en el dataset de entrenamiento original.
 
 ```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
-model_6 <- lm(
+model_5 <- lm(
   peso ~ altura + edad + genero + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
   data = original_train_set
 )
 
-coefficients_summary(model_6)
-anova_summary(model_6)
-glance(model_6)
+coefficients_summary(model_5)
+anova_summary(model_5)
+glance(model_5)
 ```
 
 ```{r}
-compare_r2(model_1, model_6)
+compare_r2(model_1, model_5)
 ```
 
 Hay una diferencia porcentual muy alta del $R^2$ ajustado en ambos modelos. El hecho de que existan outliers 
@@ -755,14 +786,14 @@ en el train set original produce que disminuya la explicabilidad del mismo en tr
 
 
 ```{r}
-models <- list('Modelo 1' = model_1, 'Modelo 6' = model_6)
+models <- list('Modelo 1' = model_1, 'Modelo 5' = model_5)
 models %>% eval_models_summary(test_set,  metric_fn = rmse)
 models %>% eval_models_summary(test_set,  metric_fn = mae)
 ```
 
 En este caso los resultados son muy consistentes con ambas métricas (RMSE y MAE). En ambos caso el 
 **Modelo 1** es el que logra un menor error en test, ademas de tener la menor diferencia entre train y test.
-Por otro lado, con ambas métricas se aprecia que el **Modelo 6** tiene peor performance en train que en test.
+Por otro lado, con ambas métricas se aprecia que el **Modelo 5** tiene peor performance en train que en test.
 Esto podría deberse a que el modelo tiene ejemplos mas difíciles de ajustar en train que en test, ya sea por 
 efecto de los outliers o por que existe algún ejemplo extra el cual es difícil de ajustar para el modelo.
 A pesar de esto, hay muy poca diferencia midiendo el RMSE train vs. test para ambos modelos.
@@ -790,11 +821,28 @@ models %>% eval_models_summary(test_set,  metric_fn = mae)
 ```
 
 Midiendo con RMSE los resultados son muy similares al punto anterior. En este caso el **Modelo Robusto** pierde 
-con respecto al **Modelo 1**, inclusive por una diferencia mucho mas grande en test que el **Modelo 6**. El modelo 
-robusto sufre del mismo problema que el **Modelo 6** donde tenemos un error en train mayor que test. Ahora
+con respecto al **Modelo 1**, inclusive por una diferencia mucho mas grande en test que el **Modelo 5**. El modelo 
+robusto sufre del mismo problema que el **Modelo 5** donde tenemos un error en train mayor que test. Ahora
 Midiendo con MAE los resultados se invierten y el **Modelo Robusto** gana por una diferencia poco significativa.
 
-Como conclusión, no parece claro que el **Modelo Robusto** o el **Modelo 6** mejor que el **Modelo 1** en otro 
+Como conclusión, no parece claro que el **Modelo Robusto** o el **Modelo 5** mejor que el **Modelo 1** en otro 
 conjunto de test distinto. Por otro lado, pareciera que el dataset original con outliers esta dificultando el 
 ajuste de los modelos en el entrenamiento. ^por otro lado no se aprecia una diferencia significativa en la performance
-del **Modelo 6** y el **Modelo Robusto**.
+del **Modelo 5** y el **Modelo Robusto**.
+
+
+**Evaluación de todos los modelos**
+
+```{r}
+models <- list('Modelo 5' = model_5, 'Modelo Robusto' = model_robusto)
+
+models %>% 
+  eval_models_summary(test_set,  metric_fn = rmse) %>% 
+  join_eval_summaries(rmse_eval_summary_result)
+
+models %>% 
+  eval_models_summary(test_set,  metric_fn = mae) %>% 
+  join_eval_summaries(mae_eval_summary_result)
+```
+
+

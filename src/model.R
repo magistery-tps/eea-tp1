@@ -61,9 +61,12 @@ plot_tidy_coefficients <- function(df) {
 }
 
 
-coefficients_summary <- function(model) {
+coefficients_summary <- function(model, show_tidy_sumamry = TRUE) {
   tidy_sumamry <- tidy(model, conf.int = TRUE)
-  printTable(as.data.frame(tidy_sumamry))
+  
+  if(show_tidy_sumamry) {
+    printTable(as.data.frame(tidy_sumamry))
+  }
   
   model_summary <- model_coefficients_summary(tidy_sumamry)
   if(!is.null(model_summary)) {
@@ -200,4 +203,16 @@ eval_models_summary <- function(models, test_set,  metric_fn = rmse) {
     arrange(test) %>%
     mutate(diff_min_test = abs(test - min_test_error))
 }
+
+join_eval_summaries <- function(sumarry_a, summary_b) {
+  summary <- sumarry_a %>% union_all(summary_b)
+  
+  min_test_error <- summary %>% pull(test) %>% min()
+
+  summary %>%
+    arrange(test) %>%
+    mutate(diff_min_test = abs(test - min_test_error))
+}
+
+
 
