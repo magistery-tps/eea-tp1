@@ -4,7 +4,7 @@ title: |
     |
     |
     | Materia: Enfoque Estadistico del Aprendizaje
-    | Trabajo práctico 1: Regresion Lineal
+    | Trabajo práctico 1: Regresion Lineal (Parte 2)
 author: "Adrian Norberto Marino"
 date: "2021/09/19"
 fig_width: 3 
@@ -516,7 +516,7 @@ test_set_snack_2 %>%
 
 4.  Evaluamos el nuevo train_set con el **modelo 2**:
 
-```{r}
+```{r fig.height=3, fig.width=6, warning=FALSE, fig.align='center'}
 model_2_redefinicion_2 <- lm(
   peso ~ altura + edad + genero + consumo_semanal_snacks +  genero * edad, 
   data = train_set_snack_2
@@ -556,8 +556,7 @@ Al continuación se define 2 modelos.
 
 **Modelo 3**
 
-En base a los resultados de importancia de variables realizados en la notebook de analisis exploratorio, $R^2$ ajustado
-de los resultados y la significación de los coeficientes se seleccionaron las siguoentes variables:
+En base a los resultados de importancia de variables realizados en la notebook [eea-tp1-eda](https://rpubs.com/adrianmarino/eea-tp1-eda), $R^2$ ajustado de los resultados y la significación de los coeficientes se seleccionaron las siguientes variables:
 
 * Altura: Ya que la altura influye en el peso del individuo directamente.
 * Genero: No tiene un relación directa, pero lo individuos masculinos tienden a tener mas altura y por ende mayor peso.
@@ -619,15 +618,16 @@ anova_summary(model_4)
 glance(model_4)
 ```
 
-Finalmente, si comparamos los modelos por $R^2$ Ajustado, se puede apreciar que el **Modelo 4** llega a captar la 
-mayor varianza explicada sobre el conjunto de entrenamiento. Por supuesto esto no dice nada acerca de la 
-performance del modelo en test, pero si que tiene la mejor capacidad para extraer información de los dato 
-de entrenamiento.
+Finalmente, si comparamos los modelos por $R^2$ Ajustado, se puede apreciar que el **Modelo 4** llega
+a captar la mayor varianza explicada sobre el conjunto de entrenamiento. Por supuesto esto no dice
+nada acerca de la performance del modelo en test, pero si que tiene la mejor capacidad para extraer
+información de los dato de entrenamiento.
 
-### 4.2. Evaluar la performance del modelo inicial, el modelo categóricas con las categorías redefinidas de la variable consumo_semanal_snacks y los modelos desarrollados en este punto en el dataset de entrenamiento y evaluación (usar dataset "encuesta_salud_test.csv"). La evaluación de performance consiste en comparar en ambos sets la performance en términos del R cuadrado ajustado, RMSE y MAE ¿Cuál es el mejor modelo para nuestro objetivo de predecir el peso? ¿Por qué?
+### 4.2. Evaluar la performance del modelo inicial, el modelo con las categorías redefinidas de la variable consumo_semanal_snacks y los modelos desarrollados en este punto en el dataset de entrenamiento y evaluación (usar dataset "encuesta_salud_test.csv"). La evaluación de performance consiste en comparar en ambos sets la performance en términos del R cuadrado ajustado, RMSE y MAE ¿Cuál es el mejor modelo para nuestro objetivo de predecir el peso? ¿Por qué?
 
-Ahora comparamos la performance de todo los modelos al evaluar el error de los mismo al predecir el
+Ahora comparamos la performance de todo los modelos evaliando el error de los mismo al predecir el
 peso en el conjunto de train y test tanto para RMSE como MAE:
+
 
 **RMSE**
 
@@ -645,17 +645,25 @@ eval_summary <- function(metric_fn = rmse) {
   
   summary_part_3 <- list('Modelo 2 - Re-definición 2' = model_2_redefinicion_2) %>% 
     train_test_eval_metric_summary(test_set = test_set_snack_2, metric_fn = metric_fn)
-  
+
   summary <- summary_part_1 %>% 
     union_all(summary_part_2) %>% 
-    union_all(summary_part_3) %>%
-    arrange(test)
+    union_all(summary_part_3)
   
   min_test_error <- summary %>% 
-    pull(test) %>% 
+    pull(test_error) %>% 
     min()
   
-  summary %>% mutate(diff_min_test = abs(test - min_test_error))
+  max_r_2_adjusted <- summary %>% 
+    pull(r_2_adjusted) %>% 
+    max()
+
+  summary %>% mutate(
+    min_test_error_diff = abs(test_error - min_test_error),
+    max_r2_diff         = abs(r_2_adjusted - max_r_2_adjusted)
+  ) %>%
+    select(model, r_2_adjusted, max_r2_diff, train_error , test_error, error_diff, min_test_error_diff) %>%
+    arrange(test_error)
 }
 
 rmse_eval_summary_result <- eval_summary(rmse)
@@ -663,14 +671,14 @@ rmse_eval_summary_result
 ```
 
 Si utilizamos la métrica RMSE podemos ver que el modelo **Modelo 2 - Re-definición 1** tiene el menor error
-al evaluarlo con el conjunto de test. Por otro lado, el que tiene menor diferencia de error entre test y entrenamiento. Esto nos dice que tiene el menor grado de sobre-ajuste (overfitting) al conjunto de entrenamiento. 
-
-El **Modelo 4**  por otro lado es el que mas se ajusta al conjunto de entrenamiento ya que tiene el menor error en train
-y ademas la mayor diferencia entre train y test. Sucede algo muy similar con el modelo **Modelo 3** pero en menor medida.
-
-Otro punto a tener es la diferencia en el error en test para **Modelo 2 - Re-definición 1**  y **Modelo 4**. Parece ser una diferencia my baja en términos de error lo que sugiere que performan de formar similar para este conjunto de test, pero
-no podemos asegurarlo con otro conjunto de tst distinto. Por todas estas cuestiones bajo la metrica RMSE el modelo
- **Modelo 2 - Re-definición 1** parece ser el mas razonable.
+al evaluarlo con el conjunto de test. Por otro lado, es el que tiene menor diferencia de error entre test
+y entrenamiento. Esto nos dice que tiene el menor grado de sobre-ajuste (overfitting) al conjunto de 
+entrenamiento. 
+Otro punto importante, es que es uno de los modelos con mayor diferencian en $R^2$ ajustado 
+contra el **Modelo 4** el cual tiene el mayor $R^2$ ajustado, siendo este es otro indicador de que el 
+**Modelo 4** se ajusta mas al conjunto de entrenamiento, cayendo en el mayor sobre ajuste posible.
+Sucede algo muy similar con el modelo **Modelo 3** pero en menor medida es cual es el segundo sobre ajustando
+y el que tiene mayor error al evaluar en test seguido de los modelos 1 y 4.
 
 **MAE**
 
@@ -680,11 +688,11 @@ mae_eval_summary_result
 ```
 
 Usan la métrica MAE el **Modelo 4** es el que tiene el menor error en test seguido de **Modelo 2 - Re-definición 1**.
-**Modelo 2 - Re-definición 1** parece ser el modelo que menos sobre-ajuste y sorprendente-mente el **Modelo 4** a pesar de ser
-el que menos error tiene el test también es el que mas sobre ajusta al conjunto de test dado. Por esta ultima cuestión
-la mejor opción el el modelo **Modelo 2 - Re-definición 1** ya que el modelo **Modelo 4** es el que peor generaliza.
+El **Modelo 2 - Re-definición 1** parece ser el modelo que menos sobre-ajuste y sorprendente-mente el **Modelo 4** a pesar de ser el que menos error tiene el test también es el que mas sobre ajusta al conjunto de test dado. Por esta ultima cuestión
+la mejor opción es el modelo **Modelo 2 - Re-definición 1** ya que el modelo **Modelo 4** es el que peor generaliza.
 
-Finalmente, según ambas métricas **Modelo 2 - Re-definición 1** es el modelo mas adecuado.
+Finalmente, según ambas métricas **Modelo 2 - Re-definición 1** es el modelo mas adecuado para ambas metricas (RMSE y MAE).
+
 
 ## 5. Diagnóstico del modelo
 
@@ -734,7 +742,7 @@ con la incorporación de algunas observaciones adicionales que pueden incluir va
 particular, observar la relación entre peso y altura ¿Qué ocurre con estos nuevos datos?
 
 A continuación se carga el conjunto de entrenamiento en crudo, es decir sin pre-procesamiento. Luego
-se resumen los valores de las variables categóricas y se tranforman lo misssings a NA's:
+se resumen los valores de las variables categóricas y se transforman lo misssings a NA's:
 
 ```{r warning=FALSE}
 original_train_set <- load_original_train_set() %>% 
@@ -772,7 +780,7 @@ model_5 <- lm(
   data = original_train_set
 )
 
-coefficients_summary(model_5)
+coefficients_summary(model_5, show_tidy_sumamry = FALSE)
 anova_summary(model_5)
 glance(model_5)
 ```
@@ -782,7 +790,7 @@ compare_r2(model_1, model_5)
 ```
 
 Hay una diferencia porcentual muy alta del $R^2$ ajustado en ambos modelos. El hecho de que existan outliers 
-en el train set original produce que disminuya la explicabilidad del mismo en train.
+en el conjunto de entrenamiento original produce que disminuya la explicabilidad del mismo.
 
 
 ```{r}
@@ -796,7 +804,7 @@ En este caso los resultados son muy consistentes con ambas métricas (RMSE y MAE
 Por otro lado, con ambas métricas se aprecia que el **Modelo 5** tiene peor performance en train que en test.
 Esto podría deberse a que el modelo tiene ejemplos mas difíciles de ajustar en train que en test, ya sea por 
 efecto de los outliers o por que existe algún ejemplo extra el cual es difícil de ajustar para el modelo.
-A pesar de esto, hay muy poca diferencia midiendo el RMSE train vs. test para ambos modelos.
+A pesar de esto, hay muy poca diferencia de error en test entre ambos modelos.
 
 ### 6.3. Entrenar un modelo robusto con la misma especificación que el modelo inicial
 sobre los nuevos datos. Comparar los coeficientes y su performance (RMSE y MAE) respecto al modelo
@@ -807,42 +815,44 @@ inicial no robusto entrenado en este punto. ¿Qué puede concluir al respecto?
 Definimos un modelo igual al **modelo 1** entrenando en el dataset de entrenamiento original y
 usamos un modelo lineal robusto.
 
-```{r}
+```{r warning=FALSE}
 model_robusto <- rlm(
   peso ~ altura + edad + genero + dias_actividad_fisica_semanal + consumo_diario_alcohol, 
   data = original_train_set
 )
 
-coefficients_summary(model_robusto)
+coefficients_summary(model_robusto, show_tidy_sumamry = FALSE)
 
 models <- list('Modelo 1' = model_1, 'Modelo Robusto' = model_robusto)
-models %>% eval_models_summary(test_set,  metric_fn = rmse)
-models %>% eval_models_summary(test_set,  metric_fn = mae)
+models %>% eval_models_summary(test_set,  metric_fn = rmse, include_r2 = FALSE)
+models %>% eval_models_summary(test_set,  metric_fn = mae, include_r2  = FALSE)
 ```
 
-Midiendo con RMSE los resultados son muy similares al punto anterior. En este caso el **Modelo Robusto** pierde 
+Con RMSE los resultados son muy similares al punto anterior. En este caso el **Modelo Robusto** pierde 
 con respecto al **Modelo 1**, inclusive por una diferencia mucho mas grande en test que el **Modelo 5**. El modelo 
 robusto sufre del mismo problema que el **Modelo 5** donde tenemos un error en train mayor que test. Ahora
 Midiendo con MAE los resultados se invierten y el **Modelo Robusto** gana por una diferencia poco significativa.
 
-Como conclusión, no parece claro que el **Modelo Robusto** o el **Modelo 5** mejor que el **Modelo 1** en otro 
-conjunto de test distinto. Por otro lado, pareciera que el dataset original con outliers esta dificultando el 
-ajuste de los modelos en el entrenamiento. ^por otro lado no se aprecia una diferencia significativa en la performance
+Como conclusión, Los modelos  **Modelo Robusto** y **Modelo 5** on son mejores que el **Modelo 1** sobre otro 
+conjunto este conjunto de test. Por otro lado, los outliers presentes en el dataset original dificultan el
+ajuste de los modelos en el entrenamiento. Por otro lado, no se aprecia una diferencia significativa en la performance
 del **Modelo 5** y el **Modelo Robusto**.
 
 
 **Evaluación de todos los modelos**
 
-```{r}
+```{r warning=FALSE}
 models <- list('Modelo 5' = model_5, 'Modelo Robusto' = model_robusto)
 
 models %>% 
   eval_models_summary(test_set,  metric_fn = rmse) %>% 
-  join_eval_summaries(rmse_eval_summary_result)
+  join_eval_summaries(rmse_eval_summary_result) %>%
+  select(model, r_2_adjusted, train_error, test_error, error_diff)
 
 models %>% 
   eval_models_summary(test_set,  metric_fn = mae) %>% 
-  join_eval_summaries(mae_eval_summary_result)
+  join_eval_summaries(mae_eval_summary_result) %>%
+  select(model, r_2_adjusted, train_error, test_error, error_diff)
 ```
 
 

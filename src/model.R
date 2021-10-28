@@ -87,24 +87,31 @@ train_test_eval_metric_summary <- function(
   models, 
   test_set = NULL, 
   truth_column='peso', 
-  metric_fn = rmse
+  metric_fn = rmse,
+  include_r2 = TRUE
 ) {
   train_eval <- eval_metric_summary(
     models, 
     truth_column = truth_column, 
     metric_fn    = metric_fn
-  ) %>% rename(train = .estimate)
+  ) %>% rename(train_error = .estimate)
+
+  if(include_r2) {
+    train_eval$r_2_adjusted <- models %>% 
+      map(function(m) { glance(m)$adj.r.squared }) %>% 
+      unlist()
+  }
 
   test_eval <- eval_metric_summary(
     models, 
     truth_column = truth_column, 
     metric_fn    = metric_fn,
     test_set     = test_set
-  ) %>% rename(test = .estimate)
+  ) %>% rename(test_error = .estimate)
 
   train_eval %>%
     inner_join(test_eval, by= 'model') %>%
-    mutate(train_test_diff = abs(train - test))
+    mutate(error_diff = abs(train_error - test_error)) 
 }
 
 eval_metric_summary <- function(
@@ -121,9 +128,7 @@ eval_metric_summary <- function(
     truth    = !!sym(truth_column), 
     estimate = .fitted, 
     .id="model"
-  ) %>% 
-    dplyr::select(model, .estimate) %>%
-    dplyr::arrange(.estimate)
+  ) %>% dplyr::select(model, .estimate)
 }
 
 custom_models_evaluation_summary <- function(
@@ -191,27 +196,29 @@ compare_r2 <- function(model_1, model_2) {
   ))
 }
 
-eval_models_summary <- function(models, test_set,  metric_fn = rmse) {
+eval_models_summary <- function(models, test_set,  metric_fn = rmse, include_r2 = TRUE) {
   summary <- models %>% 
-  train_test_eval_metric_summary(test_set = test_set, metric_fn = metric_fn)
+  train_test_eval_metric_summary(test_set = test_set, metric_fn = metric_fn, include_r2 = include_r2)
 
   min_test_error <- summary %>% 
-    pull(test) %>% 
+    pull(test_error) %>% 
     min()
-  
+
   summary %>% 
-    arrange(test) %>%
-    mutate(diff_min_test = abs(test - min_test_error))
+    mutate(diff_min_test = abs(test_error - min_test_error)) %>%
+    arrange(test_error)
 }
 
 join_eval_summaries <- function(sumarry_a, summary_b) {
   summary <- sumarry_a %>% union_all(summary_b)
   
-  min_test_error <- summary %>% pull(test) %>% min()
+  min_test_error <- summary %>% 
+    pull(test_error) %>% 
+    min()
 
   summary %>%
-    arrange(test) %>%
-    mutate(diff_min_test = abs(test - min_test_error))
+    mutate(diff_min_test = abs(test_error - min_test_error)) %>%
+    arrange(test_error)
 }
 
 
