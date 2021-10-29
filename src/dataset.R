@@ -64,3 +64,14 @@ important_variables_set <- function(result, top=2, metrics=c("%IncMSE", "IncNode
     unlist() %>% 
     unique()
 }
+
+outliers <- function(df, column) {
+  bp <- boxplot(df %>% pull(!!sym(column)))
+  out_inf <- bp$stats[1]
+  out_sup <- bp$stats[5]
+  
+  list(
+    inf = df %>% filter(!!sym(column) <= out_inf) %>% pull(!!sym(column)) %>% unique() %>% sort(),
+    sup = df %>% filter(!!sym(column) >= out_sup) %>% pull(!!sym(column)) %>% unique() %>% sort()
+  )
+}

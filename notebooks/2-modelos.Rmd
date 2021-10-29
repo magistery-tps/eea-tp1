@@ -757,12 +757,24 @@ lineal por defecto los filtra. Comparemos las distribuciones del peso vs. altura
 de entrenamiento:
 
 ```{r fig.height=5, fig.width=4, warning=FALSE, fig.align='center'}
-box_plots(train_set %>% select(peso, altura), title = 'Peso vs. Altura en train')
-box_plots(original_train_set %>% select(peso, altura), title = 'Peso vs. Altura en train(Original)')
+box_plots(train_set %>% select(altura, peso), title = 'Peso vs. Altura en train')
+box_plots(original_train_set %>% select(altura, peso), title = 'Peso vs. Altura en train(Original)')
 ```
 
-En el dataset de entrenamiento original la variable peso tiene prácticamente el doble de outliers
-que el dataset procesado.
+
+```{r, fig.show='hide'}
+outliers(original_train_set, 'altura')
+outliers(train_set, 'altura')
+```
+
+```{r, fig.show='hide'}
+outliers(original_train_set, 'peso')
+outliers(train_set, 'peso')
+```
+
+En el dataset de entrenamiento original la variable peso tiene outliers mas extremos que el dataset pre-procesado,
+los cuales se encuentran entre los 144 y 187 kg. por otro lado la altura tiene los mismos outliers en 
+ambos dataset. 
 
 
 ### 6.2. Entrenar el modelo inicial con estos nuevos datos y comentar qué se observa en los coeficientes 
@@ -853,5 +865,13 @@ models %>%
   join_eval_summaries(mae_eval_summary_result) %>%
   select(model, r_2_adjusted, train_error, test_error, error_diff)
 ```
+Si comparamos todos los modelos, se puede ver con claridad que el **Modelo Robusto** queda ultimo 
+al medir su performance con RMSE, pero es el mejor modelo al medir con MAE ¿Por que sucede esto?. 
+El **Modelo Robusto** fue entrenada con el dataset original de entrenamiento, este dataset tiene mas outliers
+que el dataset original. Luego esto repercute en el modelo, ya que vamos a tener residuos con un mayor desvío.
+Por otro lado, la métricas RMSE penaliza los errores, es decir que le da un peso mayor con respeto al MAE. Esto
+causa que aumente mucho el RMSE del **Modelo Robusto**.
 
+Finalmente **Modelo 2 - Re-definición 1** sigue teniendo el menor RMSE en test y ademas están entre los modelos
+que tiene menor overfitting.
 
